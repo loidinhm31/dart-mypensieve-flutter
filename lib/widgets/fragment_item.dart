@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/screens/detail_fragment_screen.dart';
 
 class FragmentItemWidget extends StatelessWidget {
   const FragmentItemWidget({
@@ -10,22 +11,26 @@ class FragmentItemWidget extends StatelessWidget {
 
   final Fragment fragment;
 
+  void _selectFragment(BuildContext context) {
+    Navigator.of(context)
+        .pushNamed(DetailFragmentScreenWidget.routeName, arguments: fragment);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mediaQuery = MediaQuery.of(context);
 
-    return Card(
-      elevation: 5,
-      margin: const EdgeInsets.symmetric(
-        vertical: 8,
-        horizontal: 5,
-      ),
+    return InkWell(
+      onTap: () => _selectFragment(context),
+      splashColor: theme.colorScheme.secondary,
       child: ListTile(
+        tileColor: theme.colorScheme.tertiary,
         leading: Container(
-          height: 60,
-          width: 150,
+          height: mediaQuery.size.height * 0.065,
+          width: mediaQuery.size.width * 0.3,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.background,
             shape: BoxShape.rectangle,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -38,7 +43,7 @@ class FragmentItemWidget extends StatelessWidget {
         ),
         title: Text(
           fragment.title,
-          style: theme.textTheme.displayLarge,
+          style: theme.textTheme.titleLarge,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,16 +55,12 @@ class FragmentItemWidget extends StatelessWidget {
             Center(
               child: Text(
                 fragment.value,
-                style: theme.textTheme.displayMedium,
+                style: theme.textTheme.displayLarge,
               ),
             ),
           ],
         ),
         isThreeLine: true,
-        trailing: IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () {},
-        ),
       ),
     );
   }

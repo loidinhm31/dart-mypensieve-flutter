@@ -11,14 +11,7 @@ class UserFragmentsWidget extends StatefulWidget {
 }
 
 class _UserFragmentsWidgetState extends State<UserFragmentsWidget> {
-  final List<Fragment> _userFragments = [
-    // Item(id: 't1', title: 'T1', category: 'C1', date: DateTime.now()),
-    // Item(id: 't2', title: 'T2', category: 'C2', date: DateTime.now()),
-    // Item(id: 't2', title: 'T2', category: 'C2', date: DateTime.now()),
-    // Item(id: 't2', title: 'T2', category: 'C2', date: DateTime.now()),
-    // Item(id: 't2', title: 'T2', category: 'C2', date: DateTime.now()),
-    // Item(id: 't2', title: 'T2', category: 'C2', date: DateTime.now()),
-  ];
+  final List<Fragment> _userFragments = [];
 
   void _addNewFragment(
       String fCategory, String fTitle, String fValue, DateTime fDate) {

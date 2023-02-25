@@ -3,6 +3,7 @@ class Fragment {
   final String category;
   final String title;
   final String value;
+  final String? note;
   final DateTime? date;
 
   Fragment({
@@ -10,6 +11,7 @@ class Fragment {
     required this.category,
     required this.title,
     required this.value,
-    required this.date,
+    this.note,
+    this.date,
   });
 }

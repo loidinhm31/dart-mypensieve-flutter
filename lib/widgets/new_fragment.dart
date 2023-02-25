@@ -86,7 +86,9 @@ class _NewFragmentWidgetState extends State<NewFragmentWidget> {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                      DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate)),
+                    DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate),
+                    style: theme.textTheme.displayMedium,
+                  ),
                 ),
                 TextButton(
                   style: ButtonStyle(
