@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
-import 'package:my_pensieve/widgets/user_item.dart';
+import 'package:my_pensieve/widgets/user_fragment.dart';
 
 void main() {
   runApp(const MyApp());
@@ -82,15 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.title,
-        ),
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: const <Widget>[
-          UserItemsWidget(),
+          UserFragmentsWidget(),
         ],
       ),
     );

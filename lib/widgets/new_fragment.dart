@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class NewItemWidget extends StatefulWidget {
-  final Function addItem;
+class NewFragmentWidget extends StatefulWidget {
+  final Function addFragment;
 
-  const NewItemWidget({
+  const NewFragmentWidget({
     super.key,
-    required this.addItem,
+    required this.addFragment,
   });
 
   @override
-  State<NewItemWidget> createState() => _NewItemWidgetState();
+  State<NewFragmentWidget> createState() => _NewFragmentWidgetState();
 }
 
-class _NewItemWidgetState extends State<NewItemWidget> {
+class _NewFragmentWidgetState extends State<NewFragmentWidget> {
   final _categoryController = TextEditingController();
 
   final _titleController = TextEditingController();
@@ -32,7 +32,8 @@ class _NewItemWidgetState extends State<NewItemWidget> {
         enteredValue.isEmpty) {
       return;
     }
-    widget.addItem(enteredCategory, enteredTitle, enteredValue, _selectedDate);
+    widget.addFragment(
+        enteredCategory, enteredTitle, enteredValue, _selectedDate);
   }
 
   void _presentDatePicker(BuildContext context) {
@@ -54,6 +55,8 @@ class _NewItemWidgetState extends State<NewItemWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       elevation: 5,
       child: Container(
@@ -82,12 +85,13 @@ class _NewItemWidgetState extends State<NewItemWidget> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: Text(DateFormat.yMd().format(_selectedDate)),
+                  child: Text(
+                      DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate)),
                 ),
                 TextButton(
                   style: ButtonStyle(
                     foregroundColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).colorScheme.secondary),
+                        theme.colorScheme.secondary),
                   ),
                   child: const Text('Choose Date'),
                   onPressed: () => _presentDatePicker(context),
@@ -97,14 +101,14 @@ class _NewItemWidgetState extends State<NewItemWidget> {
             ElevatedButton(
               style: ButtonStyle(
                 foregroundColor: MaterialStateProperty.all<Color>(
-                    Theme.of(context).colorScheme.secondary),
+                    theme.colorScheme.secondary),
                 shape: MaterialStateProperty.all<OutlinedBorder>(
                   const StadiumBorder(),
                 ),
               ),
               onPressed: _submitData,
               child: const Text(
-                'Add Item',
+                'Add Fragment',
               ),
             ),
           ],
