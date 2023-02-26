@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/widgets/detail_fragment.dart';
+import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/widgets/fragment_detail.dart';
+import 'package:provider/provider.dart';
 
 class DetailFragmentScreenWidget extends StatelessWidget {
   const DetailFragmentScreenWidget({super.key});
@@ -9,11 +10,11 @@ class DetailFragmentScreenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final routeArgs = ModalRoute.of(context)!.settings.arguments as Fragment;
+    final fragmentId = ModalRoute.of(context)!.settings.arguments as String;
 
     return Scaffold(
       body: ViewFragmentWidget(
-        fragment: routeArgs,
+        fragmentId: fragmentId,
       ),
     );
   }

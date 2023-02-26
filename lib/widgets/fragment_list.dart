@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/widgets/fragment_item.dart';
+import 'package:provider/provider.dart';
 
 class FragmentListWidget extends StatelessWidget {
-  final List<Fragment> _fragments;
-
   const FragmentListWidget({
     super.key,
-    required List<Fragment> fragments,
-  }) : _fragments = fragments;
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
 
+    final fragmentsData = context.watch<Fragments>();
+    final fragments = fragmentsData.items;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
       height: mediaQuery.size.height * 0.6,
-      child: _fragments.isEmpty
+      child: fragments.isEmpty
           ? Center(
               child: Text(
                 'No items added yet!',
@@ -28,11 +29,11 @@ class FragmentListWidget extends StatelessWidget {
           : ListView.builder(
               itemBuilder: (ctx, index) {
                 return FragmentItemWidget(
-                  key: ValueKey(_fragments[index].id),
-                  fragment: _fragments[index],
+                  key: ValueKey(fragments[index].id),
+                  fragment: fragments[index],
                 );
               },
-              itemCount: _fragments.length,
+              itemCount: fragments.length,
             ),
     );
   }

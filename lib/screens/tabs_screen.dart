@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/screens/fragments_screen.dart';
-import 'package:my_pensieve/screens/new_fragment_screen.dart';
+import 'package:my_pensieve/screens/fragment_new_screen.dart';
 
 class TabScreenWidget extends StatefulWidget {
   const TabScreenWidget({super.key});

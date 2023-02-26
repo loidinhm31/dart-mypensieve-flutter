@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/providers/fragments.dart';
+import 'package:provider/provider.dart';
 
 class ViewFragmentWidget extends StatelessWidget {
   const ViewFragmentWidget({
     super.key,
-    required this.fragment,
+    required this.fragmentId,
   });
 
-  final Fragment fragment;
+  final String fragmentId;
 
   Widget _buildFragmentItem(theme, mediaQuery, Icon icon, Text text) {
     return Container(
@@ -29,6 +30,11 @@ class ViewFragmentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
+
+    final loadedFragment =
+        Provider.of<Fragments>(context, listen: false).findById(fragmentId);
+
+    // final loadedFragment = context.watch<Fragments>().findById(fragmentId);
 
     return Container(
       height: mediaQuery.size.height * 0.6,
@@ -55,7 +61,7 @@ class ViewFragmentWidget extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               child: FittedBox(
                 child: Text(
-                  fragment.category,
+                  loadedFragment.category,
                   style: theme.textTheme.labelLarge,
                 ),
               ),
@@ -69,7 +75,7 @@ class ViewFragmentWidget extends StatelessWidget {
               color: Colors.white,
             ),
             Text(
-              fragment.title,
+              loadedFragment.title,
               style: theme.textTheme.displayLarge,
             ),
           ),
@@ -81,11 +87,11 @@ class ViewFragmentWidget extends StatelessWidget {
               color: Colors.white,
             ),
             Text(
-              fragment.value,
+              loadedFragment.value,
               style: theme.textTheme.displayLarge,
             ),
           ),
-          if (fragment.note != null)
+          if (loadedFragment.note != null)
             _buildFragmentItem(
               theme,
               mediaQuery,
@@ -94,7 +100,7 @@ class ViewFragmentWidget extends StatelessWidget {
                 color: Colors.white,
               ),
               Text(
-                fragment.note!,
+                loadedFragment.note!,
                 style: theme.textTheme.displayLarge,
               ),
             ),
@@ -106,7 +112,7 @@ class ViewFragmentWidget extends StatelessWidget {
               color: Colors.white,
             ),
             Text(
-              DateFormat("EEEE, yyyy/MM/dd").format(fragment.date!),
+              DateFormat("EEEE, yyyy/MM/dd").format(loadedFragment.date!),
               style: theme.textTheme.displayLarge,
             ),
           ),

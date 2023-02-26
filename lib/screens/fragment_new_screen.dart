@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/widgets/new_fragment.dart';
+import 'package:my_pensieve/widgets/fragment_new.dart';
 
 class NewFragmentScreenWidget extends StatelessWidget {
   const NewFragmentScreenWidget({super.key});

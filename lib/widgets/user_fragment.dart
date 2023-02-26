@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/widgets/fragment_list.dart';
-import 'package:my_pensieve/widgets/new_fragment.dart';
+import 'package:my_pensieve/widgets/fragment_new.dart';
 
 class UserFragmentsWidget extends StatefulWidget {
   const UserFragmentsWidget({super.key});
@@ -35,9 +35,7 @@ class _UserFragmentsWidgetState extends State<UserFragmentsWidget> {
         NewFragmentWidget(
           addFragment: _addNewFragment,
         ),
-        FragmentListWidget(
-          fragments: _userFragments,
-        ),
+        FragmentListWidget(),
       ],
     );
   }

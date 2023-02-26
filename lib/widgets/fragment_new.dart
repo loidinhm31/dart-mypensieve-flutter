@@ -68,28 +68,34 @@ class _NewFragmentWidgetState extends State<NewFragmentWidget> {
             TextField(
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                  labelText: 'Category',
-                  labelStyle: theme.textTheme.labelLarge,
-                  enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white))),
+                labelText: 'Category',
+                labelStyle: theme.textTheme.labelLarge,
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
               controller: _categoryController,
             ),
             TextField(
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                  labelText: 'Title',
-                  labelStyle: theme.textTheme.labelLarge,
-                  enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white))),
+                labelText: 'Title',
+                labelStyle: theme.textTheme.labelLarge,
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
               controller: _titleController,
             ),
             TextField(
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                  labelText: 'Value',
-                  labelStyle: theme.textTheme.labelLarge,
-                  enabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white))),
+                labelText: 'Value',
+                labelStyle: theme.textTheme.labelLarge,
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
               controller: _valueController,
             ),
             Row(

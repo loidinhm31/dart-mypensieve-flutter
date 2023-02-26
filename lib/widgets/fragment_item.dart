@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/screens/detail_fragment_screen.dart';
+import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 
 class FragmentItemWidget extends StatelessWidget {
   const FragmentItemWidget({
@@ -12,8 +12,8 @@ class FragmentItemWidget extends StatelessWidget {
   final Fragment fragment;
 
   void _selectFragment(BuildContext context) {
-    Navigator.of(context)
-        .pushNamed(DetailFragmentScreenWidget.routeName, arguments: fragment);
+    Navigator.of(context).pushNamed(DetailFragmentScreenWidget.routeName,
+        arguments: fragment.id);
   }
 
   @override
