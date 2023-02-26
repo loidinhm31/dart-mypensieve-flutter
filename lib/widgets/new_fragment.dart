@@ -58,6 +58,7 @@ class _NewFragmentWidgetState extends State<NewFragmentWidget> {
     final theme = Theme.of(context);
 
     return Card(
+      color: theme.colorScheme.background,
       elevation: 5,
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -65,21 +66,30 @@ class _NewFragmentWidgetState extends State<NewFragmentWidget> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             TextField(
-              decoration: const InputDecoration(
-                labelText: 'Category',
-              ),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                  labelText: 'Category',
+                  labelStyle: theme.textTheme.labelLarge,
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white))),
               controller: _categoryController,
             ),
             TextField(
-              decoration: const InputDecoration(
-                labelText: 'Title',
-              ),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                  labelText: 'Title',
+                  labelStyle: theme.textTheme.labelLarge,
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white))),
               controller: _titleController,
             ),
             TextField(
-              decoration: const InputDecoration(
-                labelText: 'Value',
-              ),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                  labelText: 'Value',
+                  labelStyle: theme.textTheme.labelLarge,
+                  enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white))),
               controller: _valueController,
             ),
             Row(
@@ -87,7 +97,7 @@ class _NewFragmentWidgetState extends State<NewFragmentWidget> {
                 Expanded(
                   child: Text(
                     DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate),
-                    style: theme.textTheme.displayMedium,
+                    style: theme.textTheme.displayLarge,
                   ),
                 ),
                 TextButton(

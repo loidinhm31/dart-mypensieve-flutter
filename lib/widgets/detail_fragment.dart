@@ -54,8 +54,10 @@ class ViewFragmentWidget extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(6),
               child: FittedBox(
-                child:
-                    Text(fragment.category, style: theme.textTheme.labelLarge),
+                child: Text(
+                  fragment.category,
+                  style: theme.textTheme.labelLarge,
+                ),
               ),
             ),
           ),

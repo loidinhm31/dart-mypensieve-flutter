@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/screens/fragment_screen.dart';
+import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/detail_fragment_screen.dart';
+import 'package:my_pensieve/screens/new_fragment_screen.dart';
+import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
 
@@ -70,7 +72,11 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (ctx) => const FragmentListScreenWidget(),
+        '/': (ctx) => const TabScreenWidget(),
+        NewFragmentScreenWidget.routeName: (ctx) =>
+            const NewFragmentScreenWidget(),
+        FragmentListScreenWidget.routeName: (ctx) =>
+            const FragmentListScreenWidget(),
         DetailFragmentScreenWidget.routeName: (ctx) =>
             const DetailFragmentScreenWidget(),
       },
