@@ -1,10 +1,10 @@
 class Fragment {
-  final String? id;
-  final String category;
-  final String title;
-  final String value;
-  final String? note;
-  final DateTime? date;
+  String? id;
+  String category;
+  String title;
+  String value;
+  String? note;
+  DateTime? date;
 
   Fragment({
     this.id,

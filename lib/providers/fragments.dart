@@ -30,7 +30,16 @@ class Fragments with ChangeNotifier {
   }
 
   void addFragment(Fragment fragment) {
+    fragment.id = DateTime.now().toString(); // TODO remove
     _items.add(fragment);
     notifyListeners();
+  }
+
+  void updateFragment(String id, Fragment newFragment) {
+    final fragmentIndex = _items.indexWhere((el) => el.id == id);
+    if (fragmentIndex >= 0) {
+      _items[fragmentIndex] = newFragment;
+      notifyListeners();
+    }
   }
 }

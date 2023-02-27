@@ -34,8 +34,6 @@ class ViewFragmentWidget extends StatelessWidget {
     final loadedFragment =
         Provider.of<Fragments>(context, listen: false).findById(fragmentId);
 
-    // final loadedFragment = context.watch<Fragments>().findById(fragmentId);
-
     return Container(
       height: mediaQuery.size.height * 0.6,
       padding: const EdgeInsets.all(15),
