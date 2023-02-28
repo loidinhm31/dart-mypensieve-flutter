@@ -2,7 +2,7 @@ class Fragment {
   String? id;
   String category;
   String title;
-  String value;
+  String description;
   String? note;
   DateTime? date;
 
@@ -10,7 +10,7 @@ class Fragment {
     this.id,
     required this.category,
     required this.title,
-    required this.value,
+    required this.description,
     this.note,
     this.date,
   });

@@ -23,22 +23,16 @@ class EditFragmentWidget extends StatefulWidget {
 class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _fragmentForm = GlobalKey<FormState>();
 
-  var _editedFragment = Fragment(
-    category: '',
-    title: '',
-    value: '',
-    date: DateTime.now(),
-  );
+  late Fragment _editedFragment;
   bool _isInit = true;
 
   final _dateController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
 
   @override
   void initState() {
     widget.customController.handleController = saveForm;
 
-    _dateController.text = DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate);
     super.initState();
   }
 
@@ -48,7 +42,19 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
       if (widget.fragmentId.isNotEmpty) {
         _editedFragment = Provider.of<Fragments>(context, listen: false)
             .findById(widget.fragmentId);
+
+        _selectedDate = _editedFragment.date!;
+      } else {
+        _selectedDate = DateTime.now();
+        _editedFragment = Fragment(
+          category: '',
+          title: '',
+          description: '',
+          date: _selectedDate,
+        );
       }
+      _dateController.text =
+          DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate);
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -96,7 +102,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     );
   }
 
-  void saveForm() {
+  Future<void> saveForm() async {
     FormState formState = _fragmentForm.currentState as FormState;
     if (!formState.validate()) {
       return;
@@ -106,13 +112,31 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
 
     // Save the fragment
     if (_editedFragment.id != null) {
-      Provider.of<Fragments>(context, listen: false)
-          .updateFragment(_editedFragment.id!, _editedFragment);
-      Navigator.of(context).pop();
+      await Provider.of<Fragments>(context, listen: false)
+          .updateFragment(_editedFragment.id!, _editedFragment)
+          .then((_) => Navigator.of(context).pop());
     } else {
-      Provider.of<Fragments>(context, listen: false)
-          .addFragment(_editedFragment);
-      Navigator.of(context).pushNamed('/');
+      try {
+        await Provider.of<Fragments>(context, listen: false)
+            .addFragment(_editedFragment)
+            .then((_) => Navigator.of(context).pushNamed('/'));
+      } catch (error) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('An error occurred!'),
+            content: Text(error.toString()),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Okay'),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/');
+                },
+              )
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -194,13 +218,13 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                 theme,
                 mediaQuery,
                 const Icon(
-                  Icons.info,
+                  Icons.description,
                   color: Colors.white,
                 ),
                 TextFormField(
-                  initialValue: _editedFragment.value,
+                  initialValue: _editedFragment.description,
                   decoration: InputDecoration(
-                    labelText: 'Value',
+                    labelText: 'Description',
                     labelStyle: theme.textTheme.labelLarge,
                     enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
@@ -217,7 +241,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     return null;
                   },
                   onSaved: (newValue) {
-                    _editedFragment.value = newValue!;
+                    _editedFragment.description = newValue!;
                   },
                 ),
               ),

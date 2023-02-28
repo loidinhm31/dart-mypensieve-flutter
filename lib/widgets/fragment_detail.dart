@@ -31,8 +31,7 @@ class ViewFragmentWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
 
-    final loadedFragment =
-        Provider.of<Fragments>(context, listen: false).findById(fragmentId);
+    final loadedFragment = Provider.of<Fragments>(context).findById(fragmentId);
 
     return Container(
       height: mediaQuery.size.height * 0.6,
@@ -81,11 +80,11 @@ class ViewFragmentWidget extends StatelessWidget {
             theme,
             mediaQuery,
             const Icon(
-              Icons.info,
+              Icons.description,
               color: Colors.white,
             ),
             Text(
-              loadedFragment.value,
+              loadedFragment.description,
               style: theme.textTheme.displayLarge,
             ),
           ),

@@ -54,7 +54,7 @@ class FragmentItemWidget extends StatelessWidget {
             ),
             Center(
               child: Text(
-                fragment.value,
+                fragment.description,
                 style: theme.textTheme.displayLarge,
               ),
             ),
