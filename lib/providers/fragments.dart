@@ -1,10 +1,7 @@
-import 'dart:convert';
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+import 'package:mongo_dart/mongo_dart.dart';
 import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/repository/mongo_repository.dart';
 
 class Fragments with ChangeNotifier {
   final _fragmentsRef = 'pensieve/fragments';
@@ -20,81 +17,73 @@ class Fragments with ChangeNotifier {
   }
 
   Future<void> fetchAndSetFragments() async {
-    DatabaseReference fragmentsRef =
-        FirebaseDatabase.instance.ref(_fragmentsRef);
-    try {
-      final snapshot = await fragmentsRef.get();
+    final MongoRepository mongoRepository = MongoRepository();
+    await mongoRepository.open();
 
-      if (snapshot.exists) {
+    try {
+      final fragments = await mongoRepository.find('fragments');
+
+      if (fragments.isNotEmpty) {
         final List<Fragment> loadedFragments = [];
-        final responseData =
-            jsonDecode(jsonEncode(snapshot.value)) as Map<String, dynamic>;
-        responseData.forEach((fragmentId, fragmentData) {
-          loadedFragments.add(Fragment(
-            id: fragmentData['id'],
-            category: fragmentData['category'],
-            title: fragmentData['title'],
-            description: fragmentData['description'],
-            note: fragmentData['note'],
-            date: DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
-                .parse(fragmentData['date']),
-          ));
-        });
+        for (var element in fragments) {
+          loadedFragments.add(Fragment.fromMap(element));
+        }
 
         _items = loadedFragments;
         notifyListeners();
       } else {
-        if (snapshot.children.isEmpty) {
-          _items = [];
-          notifyListeners();
-        }
+        _items = [];
+        notifyListeners();
       }
     } catch (error) {
       rethrow;
+    } finally {
+      await mongoRepository.close();
     }
   }
 
   Future<void> addFragment(Fragment fragment) async {
-    DatabaseReference fragmentsRef =
-        FirebaseDatabase.instance.ref(_fragmentsRef);
-    DatabaseReference newFragmensRef = fragmentsRef.push();
+    final MongoRepository mongoRepository = MongoRepository();
+    await mongoRepository.open();
 
     try {
-      await newFragmensRef.set({
-        'id': newFragmensRef.key,
-        'category': fragment.category,
-        'title': fragment.title,
-        'description': fragment.description,
-        'note': fragment.note,
-        'date': fragment.date?.toUtc().toIso8601String(),
-      });
-
-      notifyListeners();
+      await mongoRepository
+          .insertOne('fragments', fragment.toMap())
+          .then((_id) => fragment.id = _id);
     } catch (error) {
       rethrow;
-    }
+    } finally {
+      _items.add(fragment);
+      notifyListeners();
 
-    _items.add(fragment);
-    notifyListeners();
+      await mongoRepository.close();
+    }
   }
 
   Future<void> updateFragment(String id, Fragment newFragment) async {
     final fragmentIndex = _items.indexWhere((el) => el.id == id);
 
     if (fragmentIndex >= 0) {
-      DatabaseReference fragmentsRef =
-          FirebaseDatabase.instance.ref('$_fragmentsRef/$id');
+      final MongoRepository mongoRepository = MongoRepository();
+      await mongoRepository.open();
+      try {
+        Map<String, dynamic> update = {
+          'selector': {
+            'field': Fragment.ID,
+            'value': ObjectId.parse(id),
+          },
+          'update': newFragment.toMapUpdate(),
+        };
+        print(update);
+        await mongoRepository.update('fragments', update);
+      } catch (error) {
+        rethrow;
+      } finally {
+        _items[fragmentIndex] = newFragment;
+        notifyListeners();
 
-      fragmentsRef.child('category').set(newFragment.category);
-      fragmentsRef.child('title').set(newFragment.title);
-      fragmentsRef.child('description').set(newFragment.description);
-      fragmentsRef.child('note').set(newFragment.note);
-      fragmentsRef
-          .child('date')
-          .set(newFragment.date?.toUtc().toIso8601String());
-
-      // _items[fragmentIndex] = newFragment;
-      notifyListeners();
+        await mongoRepository.close();
+      }
     }
   }
 }

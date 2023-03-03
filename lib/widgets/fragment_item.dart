@@ -37,12 +37,13 @@ class FragmentItemWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(6),
             child: FittedBox(
-              child: Text(fragment.category, style: theme.textTheme.labelLarge),
+              child:
+                  Text(fragment.category!, style: theme.textTheme.labelLarge),
             ),
           ),
         ),
         title: Text(
-          fragment.title,
+          fragment.title!,
           style: theme.textTheme.titleLarge,
         ),
         subtitle: Column(
@@ -54,7 +55,7 @@ class FragmentItemWidget extends StatelessWidget {
             ),
             Center(
               child: Text(
-                fragment.description,
+                fragment.description!,
                 style: theme.textTheme.displayLarge,
               ),
             ),

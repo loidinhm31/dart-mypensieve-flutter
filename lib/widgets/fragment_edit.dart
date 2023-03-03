@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:provider/provider.dart';
 
 class EditFragmentWidget extends StatefulWidget {
@@ -27,6 +28,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   bool _isInit = true;
 
   final _dateController = TextEditingController();
+  final _timeController = TextEditingController();
+
   late DateTime _selectedDate;
 
   @override
@@ -54,7 +57,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         );
       }
       _dateController.text =
-          DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate);
+          DateFormat('EEEE, yyyy/MM/dd').format(_selectedDate);
+      _timeController.text = '${_selectedDate.hour} : ${_selectedDate.minute}';
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -63,7 +67,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   void _presentDatePicker(BuildContext context) {
     showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate,
       firstDate: DateTime(1990),
       lastDate: DateTime.now(),
     ).then((pickedDate) {
@@ -76,6 +80,24 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
 
         _dateController.text =
             DateFormat("EEEE, yyyy/MM/dd").format(_selectedDate);
+      });
+    });
+  }
+
+  void _presentTimePicker(BuildContext context) {
+    showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+    ).then((pickedTime) {
+      if (pickedTime == null) {
+        return;
+      }
+
+      setState(() {
+        _selectedDate = _selectedDate.copyWith(
+            hour: pickedTime.hour, minute: pickedTime.minute);
+        _timeController.text =
+            '${_selectedDate.hour} : ${_selectedDate.minute}';
       });
     });
   }
@@ -119,7 +141,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
       try {
         await Provider.of<Fragments>(context, listen: false)
             .addFragment(_editedFragment)
-            .then((_) => Navigator.of(context).pushNamed('/'));
+            .then((_) =>
+                Navigator.of(context).pushNamed(TabScreenWidget.routeName));
       } catch (error) {
         await showDialog(
           context: context,
@@ -130,7 +153,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
               TextButton(
                 child: const Text('Okay'),
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/');
+                  Navigator.of(context).pushNamed(TabScreenWidget.routeName);
                 },
               )
             ],
@@ -179,7 +202,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     return null;
                   },
                   onSaved: (newValue) {
-                    _editedFragment.category = newValue!;
+                    _editedFragment.category = newValue;
                   },
                 ),
               ),
@@ -210,7 +233,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     return null;
                   },
                   onSaved: (newValue) {
-                    _editedFragment.title = newValue!;
+                    _editedFragment.title = newValue;
                   },
                 ),
               ),
@@ -241,7 +264,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     return null;
                   },
                   onSaved: (newValue) {
-                    _editedFragment.description = newValue!;
+                    _editedFragment.description = newValue;
                   },
                 ),
               ),
@@ -262,33 +285,77 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     ),
                   ),
                   maxLines: 3,
+                  onSaved: (newValue) {
+                    _editedFragment.note = newValue;
+                  },
                 ),
               ),
-              _buildFragmentItem(
-                theme,
-                mediaQuery,
-                const Icon(
-                  Icons.date_range,
-                  color: Colors.white,
-                ),
-                TextFormField(
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
-                  controller: _dateController,
-                  onTap: () {
-                    // Below line stops keyboard from appearing
-                    FocusScope.of(context).requestFocus(FocusNode());
+              Container(
+                padding: const EdgeInsets.all(5.0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      flex: 1,
+                      child: Icon(
+                        Icons.date_range,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(
+                      width: mediaQuery.size.width * 0.1,
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              controller: _dateController,
+                              onTap: () {
+                                // Below line stops keyboard from appearing
+                                FocusScope.of(context)
+                                    .requestFocus(FocusNode());
 
-                    // Show datepicker
-                    _presentDatePicker(context);
-                  },
-                  onSaved: (_) {
-                    _editedFragment.date = _selectedDate;
-                  },
+                                // Show datepicker
+                                _presentDatePicker(context);
+                              },
+                              onSaved: (_) {
+                                _editedFragment.date = _selectedDate;
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              controller: _timeController,
+                              onTap: () {
+                                // Below line stops keyboard from appearing
+                                FocusScope.of(context)
+                                    .requestFocus(FocusNode());
+
+                                // Show datepicker
+                                _presentTimePicker(context);
+                              },
+                              onSaved: (_) {
+                                _editedFragment.date = _selectedDate;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
                 ),
-              ),
+              )
             ],
           ),
         ),

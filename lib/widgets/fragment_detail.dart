@@ -58,7 +58,7 @@ class ViewFragmentWidget extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               child: FittedBox(
                 child: Text(
-                  loadedFragment.category,
+                  loadedFragment.category!,
                   style: theme.textTheme.labelLarge,
                 ),
               ),
@@ -72,7 +72,7 @@ class ViewFragmentWidget extends StatelessWidget {
               color: Colors.white,
             ),
             Text(
-              loadedFragment.title,
+              loadedFragment.title!,
               style: theme.textTheme.displayLarge,
             ),
           ),
@@ -84,7 +84,7 @@ class ViewFragmentWidget extends StatelessWidget {
               color: Colors.white,
             ),
             Text(
-              loadedFragment.description,
+              loadedFragment.description!,
               style: theme.textTheme.displayLarge,
             ),
           ),
