@@ -1,4 +1,4 @@
-package com.example.my_pensieve
+package com.qushift.mypensieve
 
 import io.flutter.embedding.android.FlutterActivity
 

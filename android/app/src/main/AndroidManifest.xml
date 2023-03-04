@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.my_pensieve">
+    package="com.qushift.mypensieve">
    <application
         android:label="My Pensieve"
         android:name="${applicationName}"
