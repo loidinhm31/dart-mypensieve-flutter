@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_pensieve/repository/mongo_repository.dart';
 import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 
 class TabScreenWidget extends StatefulWidget {
   const TabScreenWidget({super.key});
+
+  static const routeName = '/tab';
 
   @override
   State<TabScreenWidget> createState() => _TabScreenWidgetState();

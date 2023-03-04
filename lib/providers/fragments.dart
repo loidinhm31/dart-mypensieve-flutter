@@ -21,7 +21,7 @@ class Fragments with ChangeNotifier {
     await mongoRepository.open();
 
     try {
-      final fragments = await mongoRepository.find('fragments');
+      final fragments = await mongoRepository.findAll('fragments', 'date');
 
       if (fragments.isNotEmpty) {
         final List<Fragment> loadedFragments = [];

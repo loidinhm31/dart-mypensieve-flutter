@@ -1,11 +1,11 @@
-import 'dart:math';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/custom_exceptions.dart';
+import 'package:my_pensieve/enum/auth_mode.dart';
 import 'package:my_pensieve/providers/auth.dart';
+import 'package:my_pensieve/themes/primary_pallete.dart';
+import 'package:my_pensieve/themes/second_pallete.dart';
 import 'package:provider/provider.dart';
-
-enum AuthMode { Signup, Login }
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -19,8 +19,8 @@ class AuthScreen extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color.fromRGBO(215, 117, 255, 1).withOpacity(0.5),
-                Color.fromRGBO(255, 188, 117, 1).withOpacity(0.9),
+                PrimaryPalette.kToDark.withOpacity(0.5),
+                SecondPallete.kToDark.withOpacity(0.9),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -36,29 +36,6 @@ class AuthScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                Flexible(
-                  child: Container(
-                    margin: EdgeInsets.only(bottom: 20.0),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 8.0, horizontal: 94.0),
-                    transform: Matrix4.rotationZ(-8 * pi / 180)
-                      ..translate(-10.0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.deepOrange.shade900,
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 8,
-                          color: Colors.black26,
-                          offset: Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    child: Text(
-                      'MyShop',
-                    ),
-                  ),
-                ),
                 Flexible(
                   flex: mediaQuery.size.width > 600 ? 2 : 1,
                   child: AuthCard(),
@@ -76,13 +53,13 @@ class AuthCard extends StatefulWidget {
   const AuthCard({super.key});
 
   @override
-  _AuthCardState createState() => _AuthCardState();
+  State<AuthCard> createState() => _AuthCardState();
 }
 
 class _AuthCardState extends State<AuthCard> {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
-  Map<String, String> _authData = {
+  final Map<String, String> _authData = {
     'email': '',
     'password': '',
   };
@@ -93,11 +70,11 @@ class _AuthCardState extends State<AuthCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('An Error Occurred!'),
+        title: const Text('An Error Occurred!'),
         content: Text(message),
         actions: <Widget>[
           TextButton(
-            child: Text('Okay'),
+            child: const Text('Okay'),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
@@ -119,20 +96,23 @@ class _AuthCardState extends State<AuthCard> {
     try {
       if (_authMode == AuthMode.Login) {
         // Log user in
-        await Provider.of<Auth>(context, listen: false).login(
+        await Provider.of<Auth>(context, listen: false).authenticate(
           _authData['email']!,
           _authData['password']!,
+          _authMode,
         );
       } else {
         // Sign user up
-        await Provider.of<Auth>(context, listen: false).signup(
+        await Provider.of<Auth>(context, listen: false).authenticate(
           _authData['email']!,
           _authData['password']!,
+          _authMode,
         );
       }
     } catch (error) {
-      const errorMessage =
-          'Could not authenticate you. Please try again later.';
+      log(error.toString());
+      final errorMessage =
+          'Could not authenticate you. Please try again later.\nError: ${error}';
       _showErrorDialog(errorMessage);
     }
 
@@ -173,7 +153,7 @@ class _AuthCardState extends State<AuthCard> {
             child: Column(
               children: <Widget>[
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'E-Mail'),
+                  decoration: const InputDecoration(labelText: 'E-Mail'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value!.isEmpty || !value.contains('@')) {
@@ -185,7 +165,7 @@ class _AuthCardState extends State<AuthCard> {
                   },
                 ),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Password'),
+                  decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   controller: _passwordController,
                   validator: (value) {
@@ -200,7 +180,8 @@ class _AuthCardState extends State<AuthCard> {
                 if (_authMode == AuthMode.Signup)
                   TextFormField(
                     enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
+                    decoration:
+                        const InputDecoration(labelText: 'Confirm Password'),
                     obscureText: true,
                     validator: _authMode == AuthMode.Signup
                         ? (value) {
@@ -217,24 +198,29 @@ class _AuthCardState extends State<AuthCard> {
                   const CircularProgressIndicator()
                 else
                   ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30.0,
+                        vertical: 8.0,
+                      ),
+                    ),
                     child:
                         Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP'),
-                    onPressed: _submit,
-                    // shape: RoundedRectangleBorder(
-                    //   borderRadius: BorderRadius.circular(30),
-                    // ),
-                    // padding:
-                    //     EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
-                    // color: Theme.of(context).primaryColor,
-                    // textColor: Theme.of(context).primaryTextTheme.button.color,
                   ),
                 TextButton(
+                  onPressed: _switchAuthMode,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 30.0,
+                      vertical: 4,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(
                       '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
-                  onPressed: _switchAuthMode,
-                  // padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
-                  // materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  // textColor: Theme.of(context).primaryColor,
                 ),
               ],
             ),

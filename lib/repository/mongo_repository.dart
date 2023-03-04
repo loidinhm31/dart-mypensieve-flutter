@@ -15,14 +15,22 @@ class MongoRepository {
     await _db!.open();
   }
 
-  Future<List<Map<String, dynamic>>> find(String collection) async {
+  Future<List<Map<String, dynamic>>> findAll(
+      String collection, String sortBy) async {
     var coll = _db!.collection(collection);
     List<Map<String, dynamic>> results =
-        await coll.find(where.sortBy('date')).toList();
+        await coll.find(where.sortBy(sortBy)).toList();
     return results;
   }
 
-  Future<String> insertOne(String collection, Map<String, Object?> data) async {
+  Future<List<Map<String, dynamic>>> find(
+      String collection, Map<String, dynamic> condition) async {
+    var coll = _db!.collection(collection);
+    List<Map<String, dynamic>> results = await coll.find(condition).toList();
+    return results;
+  }
+
+  Future<String> insertOne(String collection, Map<String, dynamic> data) async {
     var coll = _db!.collection(collection);
     await coll.insertOne(data);
     return (data['_id'] as ObjectId).$oid;

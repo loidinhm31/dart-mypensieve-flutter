@@ -1,92 +1,114 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
+import 'package:mongo_dart/mongo_dart.dart';
+import 'package:my_pensieve/enum/auth_mode.dart';
+import 'package:my_pensieve/repository/mongo_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth with ChangeNotifier {
   String? _userId;
-  bool _isAuth = false;
 
   bool get isAuth {
-    return _isAuth;
+    return _userId != null;
   }
 
   String? get userId {
     return _userId;
   }
 
-  Future<void> _authenticate(String email, String password) async {
-    FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: password)
-        .then((user) {
-      _token = user.credential!.accessToken;
-      _userId = user.user!.uid;
-    }).catchError((error) {
-      throw error;
-    });
+  Future<void> authenticate(
+      String email, String password, AuthMode authMode) async {
+    var bytes = utf8.encode(password); // data being hashed
+    var digest = sha256.convert(bytes);
 
-    _autoLogout();
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    final userData = json.encode(
-      {
-        'token': _token,
-        'userId': _userId,
-        'expiryDate': _expiryDate!.toIso8601String(),
-      },
-    );
-    prefs.setString('userData', userData);
+    if (authMode == AuthMode.Signup) {
+      await _signup(email, digest.toString());
+    } else if (authMode == AuthMode.Login) {
+      await _login(email, digest.toString());
+    }
+
+    if (_userId!.isNotEmpty) {
+      notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      final userData = json.encode(
+        {
+          'userId': _userId,
+        },
+      );
+      prefs.setString('userData', userData);
+    }
   }
 
-  Future<void> signup(String email, String password) async {
-    return _authenticate(email, password);
+  Future<void> _signup(String email, String password) async {
+    final MongoRepository mongoRepository = MongoRepository();
+    await mongoRepository.open();
+
+    try {
+      List<Map<String, dynamic>> userData =
+          await mongoRepository.find('users', {
+        'username': email,
+      });
+
+      if (userData.isEmpty) {
+        String userId = await mongoRepository.insertOne('users', {
+          'username': email,
+          'password': password,
+        });
+
+        if (userId.isNotEmpty) {
+          _userId = userId;
+        }
+      } else {
+        throw Exception('Cannot create with this username');
+      }
+    } catch (error) {
+      rethrow;
+    } finally {
+      await mongoRepository.close();
+    }
   }
 
-  Future<void> login(String email, String password) async {
-    return _authenticate(email, password);
+  Future<void> _login(String email, String password) async {
+    final MongoRepository mongoRepository = MongoRepository();
+    await mongoRepository.open();
+    try {
+      List<Map<String, dynamic>> userData =
+          await mongoRepository.find('users', {
+        'username': email,
+        'password': password,
+      });
+      if (userData.isNotEmpty && userData.length == 1) {
+        _userId = (userData[0]['_id'] as ObjectId).$oid;
+      }
+    } catch (error) {
+      rethrow;
+    } finally {
+      await mongoRepository.close();
+    }
   }
 
   Future<bool> tryAutoLogin() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // if (!prefs.containsKey('userData')) {
-    //   return false;
-    // }
-    // final extractedUserData =
-    //     json.decode(prefs.getString('userData')!) as Map<String, Object>;
-    // final expiryDate = DateTime.parse(extractedUserData as String);
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('userData')) {
+      return false;
+    }
+    final extractedUserData =
+        jsonDecode(prefs.getString('userData')!) as Map<String, dynamic>;
 
-    // if (expiryDate.isBefore(DateTime.now())) {
-    //   return false;
-    // }
-    // _token = extractedUserData['token'];
-    // _userId = extractedUserData['userId'];
-    // _expiryDate = expiryDate;
-    // notifyListeners();
-    // _autoLogout();
+    _userId = extractedUserData['userId'] as String?;
+    notifyListeners();
     return true;
   }
 
   Future<void> logout() async {
-    _token = null;
     _userId = null;
-    _expiryDate = null;
-    if (_authTimer != null) {
-      _authTimer!.cancel();
-      _authTimer = null;
-    }
+
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    // prefs.remove('userData');
+    prefs.remove('userData');
     prefs.clear();
-  }
-
-  void _autoLogout() {
-    if (_authTimer != null) {
-      _authTimer!.cancel();
-    }
-    final timeToExpiry = _expiryDate!.difference(DateTime.now()).inSeconds;
-    _authTimer = Timer(Duration(seconds: timeToExpiry), logout);
   }
 }
