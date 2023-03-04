@@ -4,7 +4,7 @@ import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/repository/mongo_repository.dart';
 
 class Fragments with ChangeNotifier {
-  final _fragmentsRef = 'pensieve/fragments';
+  final _fragmentsColl = 'fragments';
 
   List<Fragment> _items = [];
 
@@ -21,7 +21,7 @@ class Fragments with ChangeNotifier {
     await mongoRepository.open();
 
     try {
-      final fragments = await mongoRepository.findAll('fragments', 'date');
+      final fragments = await mongoRepository.findAll(_fragmentsColl, 'date');
 
       if (fragments.isNotEmpty) {
         final List<Fragment> loadedFragments = [];
@@ -48,7 +48,7 @@ class Fragments with ChangeNotifier {
 
     try {
       await mongoRepository
-          .insertOne('fragments', fragment.toMap())
+          .insertOne(_fragmentsColl, fragment.toMap())
           .then((_id) => fragment.id = _id);
     } catch (error) {
       rethrow;
@@ -74,8 +74,7 @@ class Fragments with ChangeNotifier {
           },
           'update': newFragment.toMapUpdate(),
         };
-        print(update);
-        await mongoRepository.update('fragments', update);
+        await mongoRepository.update(_fragmentsColl, update);
       } catch (error) {
         rethrow;
       } finally {
@@ -83,6 +82,25 @@ class Fragments with ChangeNotifier {
         notifyListeners();
 
         await mongoRepository.close();
+      }
+    }
+  }
+
+  Future<void> removeItem(String id) async {
+    final fragmentIndex = _items.indexWhere((el) => el.id == id);
+
+    if (fragmentIndex >= 0) {
+      final MongoRepository mongoRepository = MongoRepository();
+      await mongoRepository.open();
+      try {
+        await mongoRepository
+            .delete(_fragmentsColl, {Fragment.ID: ObjectId.parse(id)});
+      } catch (error) {
+        rethrow;
+      } finally {
+        await mongoRepository.close();
+        _items.removeAt(fragmentIndex);
+        notifyListeners();
       }
     }
   }

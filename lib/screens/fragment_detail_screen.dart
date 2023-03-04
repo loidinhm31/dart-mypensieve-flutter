@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 import 'package:my_pensieve/widgets/fragment_detail.dart';
+import 'package:provider/provider.dart';
 
 class DetailFragmentScreenWidget extends StatelessWidget {
   const DetailFragmentScreenWidget({super.key});
@@ -16,6 +18,11 @@ class DetailFragmentScreenWidget extends StatelessWidget {
       EditFragmentScreenWidget.routeName,
       arguments: ModalRoute.of(context)!.settings.arguments as String,
     );
+  }
+
+  void _handleDeleteButton(BuildContext context, String fragmentId) async {
+    Provider.of<Fragments>(context, listen: false).removeItem(fragmentId);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -35,6 +42,10 @@ class DetailFragmentScreenWidget extends StatelessWidget {
           TextButton(
             onPressed: () => _handleEditButton(context),
             child: const Icon(Icons.edit),
+          ),
+          TextButton(
+            onPressed: () => _handleDeleteButton(context, fragmentId),
+            child: const Icon(Icons.delete),
           ),
         ],
         bottom: PreferredSize(

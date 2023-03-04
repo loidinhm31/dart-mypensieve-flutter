@@ -52,6 +52,11 @@ class MongoRepository {
         {update['selector']['field']: update['selector']['value']}, v0!);
   }
 
+  Future<void> delete(String collection, Map<String, dynamic> condition) async {
+    var coll = _db!.collection(collection);
+    await coll.deleteOne(condition);
+  }
+
   Future<void> close() async {
     // User requested close.
     await _db!.close();
