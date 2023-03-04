@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:my_pensieve/enum/auth_mode.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:provider/provider.dart';
@@ -66,8 +65,9 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
           _authMode,
         );
       }
-    } catch (error) {
-      log(error.toString());
+    } catch (error, stack) {
+      log("Exception $error");
+      log('StackTrace $stack');
       final errorMessage =
           'Could not authenticate you. Please try again later.\nError: ${error}';
       _showErrorDialog(errorMessage);

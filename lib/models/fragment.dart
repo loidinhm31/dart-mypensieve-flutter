@@ -25,7 +25,7 @@ class Fragment {
     this.date,
   });
 
-  Map<String, Object?> toMap() {
+  Map<String, dynamic> toMap() {
     var map = <String, Object?>{
       CATEGORY: category,
       TITLE: title,
@@ -39,8 +39,8 @@ class Fragment {
     return map;
   }
 
-  Map<String, Object?> toMapUpdate() {
-    var map = <String, Object?>{
+  Map<String, dynamic> toMapUpdate() {
+    var map = <String, dynamic>{
       CATEGORY: category,
       TITLE: title,
       DESCRIPTION: description,

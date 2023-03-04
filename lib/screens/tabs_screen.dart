@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
-import 'package:my_pensieve/screens/fragments_screen.dart';
+import 'package:my_pensieve/screens/account_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
+import 'package:my_pensieve/screens/fragments_screen.dart';
 
 class TabScreenWidget extends StatefulWidget {
   const TabScreenWidget({super.key});
@@ -30,7 +30,7 @@ class _TabScreenWidgetState extends State<TabScreenWidget>
     _pages = [
       const FragmentListScreenWidget(),
       EditFragmentScreenWidget(),
-      Container(), // TODO
+      const AccountScreenWidget(),
     ];
   }
 

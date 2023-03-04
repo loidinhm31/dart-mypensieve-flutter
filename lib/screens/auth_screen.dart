@@ -25,7 +25,7 @@ class AuthScreen extends StatelessWidget {
           ),
         ),
         SingleChildScrollView(
-          child: Container(
+          child: SizedBox(
             height: mediaQuery.size.height,
             width: mediaQuery.size.width,
             child: Column(
