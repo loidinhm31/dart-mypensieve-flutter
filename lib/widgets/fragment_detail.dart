@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/widgets/fragment_expanded.dart';
-import 'package:provider/provider.dart';
 
 class ViewFragmentWidget extends StatefulWidget {
   const ViewFragmentWidget({

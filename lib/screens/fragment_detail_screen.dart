@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
