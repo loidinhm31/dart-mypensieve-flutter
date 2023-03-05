@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
@@ -57,8 +59,15 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         // Add selected linked fragments into list to keep checked state state
         final fragments = Provider.of<Fragments>(context, listen: false).items;
         for (String? id in _editedFragment.linkedItems!) {
-          Fragment f = fragments.firstWhere((element) => element.id == id);
-          Provider.of<LinkedFragments>(context, listen: false).addLinkedItem(f);
+          try {
+            Fragment? f = fragments.firstWhere((element) => element.id == id,
+                orElse: () => throw Exception());
+
+            Provider.of<LinkedFragments>(context, listen: false)
+                .addLinkedItem(f);
+          } catch (error) {
+            log('Linked fragment was deleted');
+          }
         }
 
         // Init for linked items
