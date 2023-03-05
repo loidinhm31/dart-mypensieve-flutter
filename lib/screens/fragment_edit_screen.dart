@@ -19,7 +19,7 @@ class EditFragmentScreenWidget extends StatelessWidget {
 
     final routeArg = ModalRoute.of(context)?.settings.arguments;
     if (routeArg != null) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(false);
     } else {
       Navigator.of(context).pushReplacementNamed(TabScreenWidget.routeName);
     }

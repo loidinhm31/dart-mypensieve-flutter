@@ -112,7 +112,7 @@ class MyApp extends StatelessWidget {
             LinkFragmentsScreenWidget.routeName: (ctx) =>
                 const LinkFragmentsScreenWidget(),
             DetailFragmentScreenWidget.routeName: (ctx) =>
-                const DetailFragmentScreenWidget(),
+                DetailFragmentScreenWidget(),
           },
         ),
       ),

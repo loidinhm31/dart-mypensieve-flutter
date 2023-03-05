@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:my_pensieve/controller/controller.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/widgets/fragment_expanded.dart';
 import 'package:provider/provider.dart';
@@ -7,9 +9,9 @@ import 'package:provider/provider.dart';
 class ViewFragmentWidget extends StatefulWidget {
   const ViewFragmentWidget({
     super.key,
-    required this.fragmentId,
+    required this.fragment,
   });
-  final String fragmentId;
+  final Fragment fragment;
 
   @override
   State<ViewFragmentWidget> createState() => _ViewFragmentWidgetState();
@@ -38,9 +40,6 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
 
-    final loadedFragment =
-        Provider.of<Fragments>(context).findById(widget.fragmentId);
-
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(15),
@@ -60,7 +59,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(6),
                 child: FittedBox(
                   child: Text(
-                    loadedFragment.category!,
+                    widget.fragment.category!,
                     style: theme.textTheme.labelLarge,
                   ),
                 ),
@@ -74,7 +73,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 color: Colors.white,
               ),
               Text(
-                loadedFragment.title!,
+                widget.fragment.title!,
                 style: theme.textTheme.displayLarge,
               ),
             ),
@@ -86,11 +85,11 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 color: Colors.white,
               ),
               Text(
-                loadedFragment.description!,
+                widget.fragment.description!,
                 style: theme.textTheme.displayLarge,
               ),
             ),
-            if (loadedFragment.note != null)
+            if (widget.fragment.note != null)
               _buildFragmentItem(
                 theme,
                 mediaQuery,
@@ -99,7 +98,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                   color: Colors.white,
                 ),
                 Text(
-                  loadedFragment.note!,
+                  widget.fragment.note!,
                   style: theme.textTheme.displayLarge,
                 ),
               ),
@@ -111,7 +110,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 color: Colors.white,
               ),
               Text(
-                DateFormat("EEEE, yyyy/MM/dd").format(loadedFragment.date!),
+                DateFormat("EEEE, yyyy/MM/dd").format(widget.fragment.date!),
                 style: theme.textTheme.displayLarge,
               ),
             ),
@@ -131,7 +130,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(10.0),
                 height: mediaQuery.size.height * 0.5,
                 child: ExpandedFragmentWidget(
-                  fragmentIds: loadedFragment.linkedItems!,
+                  fragmentIds: widget.fragment.linkedItems!,
                 ),
               ),
           ],

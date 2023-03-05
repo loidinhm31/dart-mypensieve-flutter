@@ -165,7 +165,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         Provider.of<LinkedFragments>(context, listen: false)
             .clearSelectedLinkedItem();
 
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       });
     } else {
       try {

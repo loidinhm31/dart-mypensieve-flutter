@@ -13,7 +13,8 @@ class Fragments with ChangeNotifier {
   }
 
   Fragment findById(String id) {
-    return _items.firstWhere((el) => el.id == id);
+    return _items.firstWhere((el) => el.id == id,
+        orElse: () => throw Exception());
   }
 
   Future<void> fetchAndSetFragments() async {
