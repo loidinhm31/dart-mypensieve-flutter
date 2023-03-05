@@ -38,8 +38,8 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
 
-    final loadedFragment = Provider.of<Fragments>(context, listen: false)
-        .findById(widget.fragmentId);
+    final loadedFragment =
+        Provider.of<Fragments>(context).findById(widget.fragmentId);
 
     return SingleChildScrollView(
       child: Container(
