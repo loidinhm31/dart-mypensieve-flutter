@@ -4,6 +4,7 @@ import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
+import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
@@ -44,43 +45,43 @@ class MyApp extends StatelessWidget {
             textTheme: ThemeData.light().textTheme.copyWith(
                   displayLarge: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 18,
+                    fontSize: 20,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                   displayMedium: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 16,
+                    fontSize: 18,
                     color: Colors.white54,
                     fontWeight: FontWeight.bold,
                   ),
                   displaySmall: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.white70,
                   ),
                   titleLarge: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: PrimaryPalette.kToDark,
+                    color: Colors.white,
                   ),
                   titleMedium: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: PrimaryPalette.kToDark,
+                    color: Colors.white,
                   ),
                   labelLarge: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: SecondPallete.kToDark,
                   ),
                   labelMedium: const TextStyle(
                     fontFamily: 'University-Oldstyle',
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: SecondPallete.kToDark,
                   ),
@@ -104,6 +105,8 @@ class MyApp extends StatelessWidget {
                 EditFragmentScreenWidget(),
             FragmentListScreenWidget.routeName: (ctx) =>
                 const FragmentListScreenWidget(),
+            LinkFragmentsScreenWidget.routeName: (ctx) =>
+                const LinkFragmentsScreenWidget(),
             DetailFragmentScreenWidget.routeName: (ctx) =>
                 const DetailFragmentScreenWidget(),
           },

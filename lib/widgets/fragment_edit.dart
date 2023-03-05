@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -29,24 +30,34 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
 
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
+  final _linkFragmentsController = TextEditingController();
+
+  List<String> _linkedItems = [];
 
   late DateTime _selectedDate;
 
   @override
   void initState() {
-    widget.customController.handleController = saveForm;
-
     super.initState();
+    widget.customController.handleController = saveForm;
   }
 
   @override
   void didChangeDependencies() {
+    super.didChangeDependencies();
+
     if (_isInit) {
       if (widget.fragmentId.isNotEmpty) {
         _editedFragment = Provider.of<Fragments>(context, listen: false)
             .findById(widget.fragmentId);
 
         _selectedDate = _editedFragment.date!;
+
+        // Init for linked items
+        for (var element in _editedFragment.linkedItems!) {
+          _linkedItems.add(element);
+        }
+        _linkFragmentsController.text = _linkedItems.join(" - ");
       } else {
         _selectedDate = DateTime.now();
         _editedFragment = Fragment(
@@ -59,9 +70,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
       _dateController.text =
           DateFormat('EEEE, yyyy/MM/dd').format(_selectedDate);
       _timeController.text = '${_selectedDate.hour} : ${_selectedDate.minute}';
+      _isInit = false;
     }
-    _isInit = false;
-    super.didChangeDependencies();
   }
 
   void _presentDatePicker(BuildContext context) {
@@ -136,13 +146,22 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     if (_editedFragment.id != null) {
       await Provider.of<Fragments>(context, listen: false)
           .updateFragment(_editedFragment.id!, _editedFragment)
-          .then((_) => Navigator.of(context).pop());
+          .then((_) {
+        Provider.of<Fragments>(context, listen: false)
+            .clearSelectedLinkedItem();
+
+        Navigator.of(context).pop();
+      });
     } else {
       try {
         await Provider.of<Fragments>(context, listen: false)
             .addFragment(_editedFragment)
-            .then((_) =>
-                Navigator.of(context).pushNamed(TabScreenWidget.routeName));
+            .then((_) {
+          Provider.of<Fragments>(context, listen: false)
+              .clearSelectedLinkedItem();
+
+          Navigator.of(context).pushNamed(TabScreenWidget.routeName);
+        });
       } catch (error) {
         await showDialog(
           context: context,
@@ -352,10 +371,50 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                           ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-              )
+              ),
+              Container(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        flex: 1,
+                        child: Icon(
+                          Icons.dataset_linked,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(
+                        width: mediaQuery.size.width * 0.1,
+                      ),
+                      Expanded(
+                          flex: 5,
+                          child: TextFormField(
+                            controller: _linkFragmentsController,
+                            onTap: () => Navigator.of(context)
+                                .pushNamed(LinkFragmentsScreenWidget.routeName,
+                                    arguments: widget.fragmentId)
+                                .then((value) {
+                              if (value == true) {
+                                setState(() {
+                                  _linkedItems = Provider.of<Fragments>(context,
+                                          listen: false)
+                                      .getStringLinkedItems();
+                                  _linkFragmentsController.text =
+                                      _linkedItems.join(" - ");
+                                });
+                              }
+                            }),
+                            onSaved: (newValue) {
+                              _editedFragment.linkedItems =
+                                  Provider.of<Fragments>(context, listen: false)
+                                      .getStringLinkedItems();
+                            },
+                          ))
+                    ],
+                  )),
             ],
           ),
         ),

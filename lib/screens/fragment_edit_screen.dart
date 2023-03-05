@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/controller/controller.dart';
+import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/widgets/fragment_edit.dart';
+import 'package:provider/provider.dart';
 
 class EditFragmentScreenWidget extends StatelessWidget {
   EditFragmentScreenWidget({super.key});
@@ -10,11 +13,14 @@ class EditFragmentScreenWidget extends StatelessWidget {
   final CustomController customController = CustomController();
 
   void _handleCancelButton(BuildContext context) {
+    // Clear selected linked fragments before leaving
+    Provider.of<Fragments>(context, listen: false).clearSelectedLinkedItem();
+
     final routeArg = ModalRoute.of(context)?.settings.arguments;
     if (routeArg != null) {
       Navigator.of(context).pop();
     } else {
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushReplacementNamed(TabScreenWidget.routeName);
     }
   }
 

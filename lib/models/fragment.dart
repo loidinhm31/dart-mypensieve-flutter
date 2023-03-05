@@ -7,6 +7,7 @@ class Fragment {
   static const String TITLE = 'title';
   static const String DESCRIPTION = 'description';
   static const String NOTE = 'note';
+  static const String LINKED_ITEMS = 'linked_items';
   static const String DATE = 'date';
 
   String? id;
@@ -14,6 +15,7 @@ class Fragment {
   String? title;
   String? description;
   String? note;
+  List<String>? linkedItems;
   DateTime? date;
 
   Fragment({
@@ -22,6 +24,7 @@ class Fragment {
     required this.title,
     required this.description,
     this.note,
+    this.linkedItems,
     this.date,
   });
 
@@ -31,6 +34,7 @@ class Fragment {
       TITLE: title,
       DESCRIPTION: description,
       NOTE: note,
+      LINKED_ITEMS: linkedItems,
       DATE: date!.toUtc().toIso8601String(),
     };
     if (id != null) {
@@ -45,6 +49,7 @@ class Fragment {
       TITLE: title,
       DESCRIPTION: description,
       NOTE: note,
+      LINKED_ITEMS: linkedItems,
       DATE: date!.toUtc().toIso8601String(),
     };
     return map;
@@ -56,6 +61,8 @@ class Fragment {
     title = map[TITLE] as String?;
     description = map[DESCRIPTION] as String?;
     note = map[NOTE] as String?;
+    linkedItems = List<String>.from(
+        map[LINKED_ITEMS] != null ? map[LINKED_ITEMS] as List<dynamic> : []);
     date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
         .parse(map[DATE] as String);
   }
