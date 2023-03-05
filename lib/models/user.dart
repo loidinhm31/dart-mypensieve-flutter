@@ -5,8 +5,8 @@ class User {
   static const String ID = '_id';
   static const String USERNAME = 'username';
   static const String DEVICES = 'devices';
-  static const String CREATED_DATE = 'createdDate';
-  static const String UPDATED_DATE = 'updatedDate';
+  static const String CREATED_DATE = 'created_date';
+  static const String UPDATED_DATE = 'updated_date';
 
   String? id;
   String? username;
