@@ -103,13 +103,14 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
         constraints:
             BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
         width: deviceSize.width * 0.75,
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
                 TextFormField(
+                  style: const TextStyle(color: Colors.black),
                   decoration: const InputDecoration(labelText: 'E-Mail'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
@@ -122,6 +123,7 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
                   },
                 ),
                 TextFormField(
+                  style: const TextStyle(color: Colors.black),
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   controller: _passwordController,
@@ -136,6 +138,7 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
                 ),
                 if (_authMode == AuthMode.Signup)
                   TextFormField(
+                    style: const TextStyle(color: Colors.black),
                     enabled: _authMode == AuthMode.Signup,
                     decoration:
                         const InputDecoration(labelText: 'Confirm Password'),
