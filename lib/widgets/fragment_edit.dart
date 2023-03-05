@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
-import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
@@ -28,7 +28,7 @@ class EditFragmentWidget extends StatefulWidget {
 class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _fragmentForm = GlobalKey<FormState>();
 
-  late Fragment _editedFragment;
+  late FragmentHive _editedFragment;
   bool _isInit = true;
 
   final _dateController = TextEditingController();
@@ -60,7 +60,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         final fragments = Provider.of<Fragments>(context, listen: false).items;
         for (String? id in _editedFragment.linkedItems!) {
           try {
-            Fragment? f = fragments.firstWhere((element) => element.id == id,
+            FragmentHive? f = fragments.firstWhere(
+                (element) => element.id == id,
                 orElse: () => throw Exception());
 
             Provider.of<LinkedFragments>(context, listen: false)
@@ -75,12 +76,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         _linkFragmentsController.text = _linkedIds.join(" - ");
       } else {
         _selectedDate = DateTime.now();
-        _editedFragment = Fragment(
-          category: '',
-          title: '',
-          description: '',
-          date: _selectedDate,
-        );
+        _editedFragment = FragmentHive();
+        _editedFragment.date = _selectedDate;
       }
       _dateController.text =
           DateFormat('EEEE, yyyy/MM/dd').format(_selectedDate);
@@ -160,7 +157,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     // Save the fragment
     if (_editedFragment.id != null) {
       await Provider.of<Fragments>(context, listen: false)
-          .updateFragment(_editedFragment.id!, _editedFragment)
+          .updateFragment(_editedFragment)
           .then((_) {
         Provider.of<LinkedFragments>(context, listen: false)
             .clearSelectedLinkedItem();

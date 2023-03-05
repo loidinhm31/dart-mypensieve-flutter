@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/widgets/fragment_link_edit_item.dart';
@@ -16,15 +17,15 @@ class LinkFragmentsScreenWidget extends StatefulWidget {
 }
 
 class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
-  late List<Fragment> _fragments;
+  late List<FragmentHive> _fragments;
 
-  final List<Fragment> _tempLinkedFragments = [];
+  final List<FragmentHive> _tempLinkedFragments = [];
 
-  void addLinkedItem(Fragment fragment) {
+  void addLinkedItem(FragmentHive fragment) {
     _tempLinkedFragments.add(fragment);
   }
 
-  void removeLinkedItem(Fragment fragment) {
+  void removeLinkedItem(FragmentHive fragment) {
     _tempLinkedFragments.removeWhere((element) => element.id == fragment.id);
   }
 

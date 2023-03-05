@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/widgets/fragment_expanded.dart';
 
 class ViewFragmentWidget extends StatefulWidget {
@@ -8,7 +8,7 @@ class ViewFragmentWidget extends StatefulWidget {
     super.key,
     required this.fragment,
   });
-  final Fragment fragment;
+  final FragmentHive fragment;
 
   @override
   State<ViewFragmentWidget> createState() => _ViewFragmentWidgetState();

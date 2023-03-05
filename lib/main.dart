@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
+import 'package:my_pensieve/repository/hive/fragment_repository.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
@@ -10,10 +13,19 @@ import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final appDocumentDir = await getApplicationDocumentsDirectory();
+
+  Hive
+    ..init(appDocumentDir.path)
+    ..registerAdapter(FragmentHiveAdapter());
+
+  await FragmentHiveRepository.init();
 
   runApp(const MyApp());
 }

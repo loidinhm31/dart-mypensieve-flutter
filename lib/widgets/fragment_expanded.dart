@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
-import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/repository/hive/fragment_repository.dart';
 import 'package:my_pensieve/widgets/fragment_link_view_item.dart';
 
 class ExpandedFragmentWidget extends StatelessWidget {
@@ -12,27 +11,15 @@ class ExpandedFragmentWidget extends StatelessWidget {
 
   final List<String?> fragmentIds;
 
-  Future<List<Fragment>> _fetchLinkedFragments() async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
+  Future<List<FragmentHive>> _fetchLinkedFragments() async {
+    final FragmentHiveRepository fragmentHiveRepository =
+        FragmentHiveRepository();
+    await fragmentHiveRepository.open();
 
-    List<Map<String, mongo.ObjectId>> idMaps = [];
-    for (var id in fragmentIds) {
-      idMaps.add({'_id': mongo.ObjectId.parse(id!)});
-    }
+    List<FragmentHive> results =
+        fragmentHiveRepository.findAllByKeys(fragmentIds);
 
-    if (idMaps.isNotEmpty) {
-      List<Map<String, dynamic>> results =
-          await mongoRepository.find('fragments', {
-        '\$or': idMaps,
-      });
-
-      return results.map((e) {
-        return Fragment.fromMap(e);
-      }).toList();
-    } else {
-      return [];
-    }
+    return results;
   }
 
   @override

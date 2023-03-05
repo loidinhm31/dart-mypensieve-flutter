@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
 
 class LinkedFragments with ChangeNotifier {
-  List<Fragment> _linkedItems = [];
+  List<FragmentHive> _linkedItems = [];
 
-  List<Fragment> get linkedItems {
+  List<FragmentHive> get linkedItems {
     return [..._linkedItems];
   }
 
-  void addLinkedItem(Fragment fragment) {
+  void addLinkedItem(FragmentHive fragment) {
     if (!_linkedItems.contains(fragment)) {
       _linkedItems.add(fragment);
     }
   }
 
-  void removeLinkedItem(Fragment fragment) {
+  void removeLinkedItem(FragmentHive fragment) {
     _linkedItems.removeWhere((element) => element.id == fragment.id);
   }
 
-  void changeLinkedItems(List<Fragment> fragments) {
+  void changeLinkedItems(List<FragmentHive> fragments) {
     _linkedItems = fragments;
     notifyListeners();
   }

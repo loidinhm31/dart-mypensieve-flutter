@@ -1,36 +1,30 @@
 import 'package:flutter/widgets.dart';
-import 'package:mongo_dart/mongo_dart.dart';
-import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
+import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/repository/hive/fragment_repository.dart';
 
 class Fragments with ChangeNotifier {
   final _fragmentsColl = 'fragments';
 
-  List<Fragment> _items = [];
+  List<FragmentHive> _items = [];
 
-  List<Fragment> get items {
+  List<FragmentHive> get items {
     return [..._items];
   }
 
-  Fragment findById(String id) {
+  FragmentHive findById(String id) {
     return _items.firstWhere((el) => el.id == id,
         orElse: () => throw Exception());
   }
 
   Future<void> fetchAndSetFragments() async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
-
+    final FragmentHiveRepository fragmentHiveRepository =
+        FragmentHiveRepository();
+    await fragmentHiveRepository.open();
     try {
-      final fragments = await mongoRepository.findAll(_fragmentsColl, 'date');
+      final fragments = fragmentHiveRepository.findAll();
 
       if (fragments.isNotEmpty) {
-        final List<Fragment> loadedFragments = [];
-        for (var element in fragments) {
-          loadedFragments.add(Fragment.fromMap(element));
-        }
-
-        _items = loadedFragments;
+        _items = fragments;
         notifyListeners();
       } else {
         _items = [];
@@ -39,50 +33,53 @@ class Fragments with ChangeNotifier {
     } catch (error) {
       rethrow;
     } finally {
-      await mongoRepository.close();
+      await fragmentHiveRepository.close();
     }
   }
 
-  Future<void> addFragment(Fragment fragment) async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
+  Future<void> addFragment(FragmentHive fragment) async {
+    final FragmentHiveRepository fragmentHiveRepository =
+        FragmentHiveRepository();
+    await fragmentHiveRepository.open();
 
     try {
-      await mongoRepository
-          .insertOne(_fragmentsColl, fragment.toMap())
-          .then((_id) => fragment.id = _id);
+      await fragmentHiveRepository.add(fragment);
     } catch (error) {
       rethrow;
     } finally {
       _items.add(fragment);
       notifyListeners();
 
-      await mongoRepository.close();
+      await fragmentHiveRepository.close();
     }
   }
 
-  Future<void> updateFragment(String id, Fragment newFragment) async {
-    final fragmentIndex = _items.indexWhere((el) => el.id == id);
+  Future<void> updateFragment(FragmentHive editFragment) async {
+    final fragmentIndex = _items.indexWhere((el) => el.id == editFragment.id);
 
     if (fragmentIndex >= 0) {
-      final MongoRepository mongoRepository = MongoRepository();
-      await mongoRepository.open();
-      try {
-        Map<String, dynamic> update = {
-          'selector': {
-            'field': Fragment.ID,
-            'value': ObjectId.parse(id),
-          },
-          'update': newFragment.toMapUpdate(),
-        };
-        await mongoRepository.update(_fragmentsColl, update);
-      } catch (error) {
-        rethrow;
-      } finally {
-        _items[fragmentIndex] = newFragment;
-        notifyListeners();
+      final FragmentHiveRepository fragmentHiveRepository =
+          FragmentHiveRepository();
+      await fragmentHiveRepository.open();
 
-        await mongoRepository.close();
+      FragmentHive? fragmentHive =
+          fragmentHiveRepository.findByKey(editFragment.id!);
+      if (fragmentHive != null) {
+        try {
+          fragmentHive.category = editFragment.category;
+          fragmentHive.title = editFragment.title;
+          fragmentHive.description = editFragment.description;
+          fragmentHive.note = editFragment.note;
+          fragmentHive.date = editFragment.date!.toUtc();
+          fragmentHive.save();
+        } catch (error) {
+          rethrow;
+        } finally {
+          _items[fragmentIndex] = editFragment;
+          notifyListeners();
+
+          await fragmentHiveRepository.close();
+        }
       }
     }
   }
@@ -91,17 +88,21 @@ class Fragments with ChangeNotifier {
     final fragmentIndex = _items.indexWhere((el) => el.id == id);
 
     if (fragmentIndex >= 0) {
-      final MongoRepository mongoRepository = MongoRepository();
-      await mongoRepository.open();
-      try {
-        await mongoRepository
-            .delete(_fragmentsColl, {Fragment.ID: ObjectId.parse(id)});
-      } catch (error) {
-        rethrow;
-      } finally {
-        await mongoRepository.close();
-        _items.removeAt(fragmentIndex);
-        notifyListeners();
+      final FragmentHiveRepository fragmentHiveRepository =
+          FragmentHiveRepository();
+      await fragmentHiveRepository.open();
+
+      FragmentHive? fragmentHive = fragmentHiveRepository.findByKey(id);
+      if (fragmentHive != null) {
+        try {
+          fragmentHive.delete();
+        } catch (error) {
+          rethrow;
+        } finally {
+          await fragmentHiveRepository.close();
+          _items.removeAt(fragmentIndex);
+          notifyListeners();
+        }
       }
     }
   }
