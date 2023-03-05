@@ -12,7 +12,7 @@ class ExpandedFragmentWidget extends StatelessWidget {
 
   final List<String?> fragmentIds;
 
-  Future<List<Fragment>> _fetchLinks() async {
+  Future<List<Fragment>> _fetchLinkedFragments() async {
     final MongoRepository mongoRepository = MongoRepository();
     await mongoRepository.open();
 
@@ -21,14 +21,18 @@ class ExpandedFragmentWidget extends StatelessWidget {
       idMaps.add({'_id': mongo.ObjectId.parse(id!)});
     }
 
-    List<Map<String, dynamic>> results =
-        await mongoRepository.find('fragments', {
-      '\$or': idMaps,
-    });
+    if (idMaps.isNotEmpty) {
+      List<Map<String, dynamic>> results =
+          await mongoRepository.find('fragments', {
+        '\$or': idMaps,
+      });
 
-    return results.map((e) {
-      return Fragment.fromMap(e);
-    }).toList();
+      return results.map((e) {
+        return Fragment.fromMap(e);
+      }).toList();
+    } else {
+      return [];
+    }
   }
 
   @override
@@ -37,7 +41,7 @@ class ExpandedFragmentWidget extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
 
     return FutureBuilder(
-      future: _fetchLinks(),
+      future: _fetchLinkedFragments(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();

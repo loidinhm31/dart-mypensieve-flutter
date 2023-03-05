@@ -48,7 +48,6 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     super.didChangeDependencies();
 
     if (_isInit) {
-      print('did change');
       if (widget.fragmentId.isNotEmpty) {
         _editedFragment = Provider.of<Fragments>(context, listen: false)
             .findById(widget.fragmentId);
