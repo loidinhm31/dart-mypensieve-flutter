@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
@@ -29,6 +30,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => Fragments(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => LinkedFragments(),
         ),
       ],
       child: Consumer<Auth>(

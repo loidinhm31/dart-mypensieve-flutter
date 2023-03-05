@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/controller/controller.dart';
-import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/widgets/fragment_edit.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +14,8 @@ class EditFragmentScreenWidget extends StatelessWidget {
 
   void _handleCancelButton(BuildContext context) {
     // Clear selected linked fragments before leaving
-    Provider.of<Fragments>(context, listen: false).clearSelectedLinkedItem();
+    Provider.of<LinkedFragments>(context, listen: false)
+        .clearSelectedLinkedItem();
 
     final routeArg = ModalRoute.of(context)?.settings.arguments;
     if (routeArg != null) {

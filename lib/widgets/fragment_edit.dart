@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +33,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _timeController = TextEditingController();
   final _linkFragmentsController = TextEditingController();
 
-  List<String> _linkedItems = [];
+  List<String?> _linkedIds = [];
 
   late DateTime _selectedDate;
 
@@ -47,17 +48,23 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     super.didChangeDependencies();
 
     if (_isInit) {
+      print('did change');
       if (widget.fragmentId.isNotEmpty) {
         _editedFragment = Provider.of<Fragments>(context, listen: false)
             .findById(widget.fragmentId);
 
         _selectedDate = _editedFragment.date!;
 
-        // Init for linked items
-        for (var element in _editedFragment.linkedItems!) {
-          _linkedItems.add(element);
+        // Add selected linked fragments into list to keep checked state state
+        final fragments = Provider.of<Fragments>(context, listen: false).items;
+        for (String? id in _editedFragment.linkedItems!) {
+          Fragment f = fragments.firstWhere((element) => element.id == id);
+          Provider.of<LinkedFragments>(context, listen: false).addLinkedItem(f);
         }
-        _linkFragmentsController.text = _linkedItems.join(" - ");
+
+        // Init for linked items
+        _linkedIds = _editedFragment.linkedItems!;
+        _linkFragmentsController.text = _linkedIds.join(" - ");
       } else {
         _selectedDate = DateTime.now();
         _editedFragment = Fragment(
@@ -70,8 +77,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
       _dateController.text =
           DateFormat('EEEE, yyyy/MM/dd').format(_selectedDate);
       _timeController.text = '${_selectedDate.hour} : ${_selectedDate.minute}';
-      _isInit = false;
     }
+    _isInit = false;
   }
 
   void _presentDatePicker(BuildContext context) {
@@ -147,7 +154,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
       await Provider.of<Fragments>(context, listen: false)
           .updateFragment(_editedFragment.id!, _editedFragment)
           .then((_) {
-        Provider.of<Fragments>(context, listen: false)
+        Provider.of<LinkedFragments>(context, listen: false)
             .clearSelectedLinkedItem();
 
         Navigator.of(context).pop();
@@ -157,7 +164,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         await Provider.of<Fragments>(context, listen: false)
             .addFragment(_editedFragment)
             .then((_) {
-          Provider.of<Fragments>(context, listen: false)
+          Provider.of<LinkedFragments>(context, listen: false)
               .clearSelectedLinkedItem();
 
           Navigator.of(context).pushNamed(TabScreenWidget.routeName);
@@ -399,18 +406,24 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                                 .then((value) {
                               if (value == true) {
                                 setState(() {
-                                  _linkedItems = Provider.of<Fragments>(context,
+                                  _linkedIds = Provider.of<LinkedFragments>(
+                                          context,
                                           listen: false)
-                                      .getStringLinkedItems();
+                                      .linkedItems
+                                      .map((e) => e.id)
+                                      .toList();
                                   _linkFragmentsController.text =
-                                      _linkedItems.join(" - ");
+                                      _linkedIds.join(" - ");
                                 });
                               }
                             }),
                             onSaved: (newValue) {
                               _editedFragment.linkedItems =
-                                  Provider.of<Fragments>(context, listen: false)
-                                      .getStringLinkedItems();
+                                  Provider.of<LinkedFragments>(context,
+                                          listen: false)
+                                      .linkedItems
+                                      .map((e) => e.id)
+                                      .toList();
                             },
                           ))
                     ],

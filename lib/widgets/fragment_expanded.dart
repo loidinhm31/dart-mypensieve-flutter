@@ -10,7 +10,7 @@ class ExpandedFragmentWidget extends StatelessWidget {
     required this.fragmentIds,
   });
 
-  final List<String> fragmentIds;
+  final List<String?> fragmentIds;
 
   Future<List<Fragment>> _fetchLinks() async {
     final MongoRepository mongoRepository = MongoRepository();
@@ -18,7 +18,7 @@ class ExpandedFragmentWidget extends StatelessWidget {
 
     List<Map<String, mongo.ObjectId>> idMaps = [];
     for (var id in fragmentIds) {
-      idMaps.add({'_id': mongo.ObjectId.parse(id)});
+      idMaps.add({'_id': mongo.ObjectId.parse(id!)});
     }
 
     List<Map<String, dynamic>> results =

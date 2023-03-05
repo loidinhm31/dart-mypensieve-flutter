@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/controller/controller.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
+import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/widgets/fragment_link_edit_item.dart';
 import 'package:provider/provider.dart';
 
@@ -17,7 +17,6 @@ class LinkFragmentsScreenWidget extends StatefulWidget {
 
 class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
   late List<Fragment> _fragments;
-  Fragment? _currFragment;
 
   final List<Fragment> _tempLinkedFragments = [];
 
@@ -40,17 +39,8 @@ class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
     final fragmentId = routeArg != null ? routeArg as String : '';
 
     if (fragmentId.isNotEmpty) {
-      _currFragment =
-          _fragments.firstWhere((element) => element.id == fragmentId);
-
       // Remove the current fragment to avoid circular referencing
       _fragments.removeWhere((element) => element.id == fragmentId);
-
-      // Add selected linked fragments into list to keep checked state state
-      for (String id in _currFragment!.linkedItems!) {
-        Fragment f = _fragments.firstWhere((element) => element.id == id);
-        Provider.of<Fragments>(context, listen: false).addLinkedItem(f);
-      }
     }
 
     return Scaffold(
@@ -66,7 +56,7 @@ class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
             style: ButtonStyle(
                 foregroundColor: MaterialStateProperty.all(Colors.white)),
             onPressed: () {
-              Provider.of<Fragments>(context, listen: false)
+              Provider.of<LinkedFragments>(context, listen: false)
                   .changeLinkedItems(_tempLinkedFragments);
 
               Navigator.of(context).pop(true);
@@ -82,9 +72,9 @@ class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
             theme: theme,
             mediaQuery: mediaQuery,
             fragment: _fragments[index],
-            checked: Provider.of<Fragments>(context, listen: false)
-                .getStringLinkedItems()
-                .contains(_fragments[index].id),
+            checked: Provider.of<LinkedFragments>(context)
+                .linkedItems
+                .contains(_fragments[index]),
             addLinkedItem: addLinkedItem,
             removeLinkedItem: removeLinkedItem,
           );

@@ -7,14 +7,9 @@ class Fragments with ChangeNotifier {
   final _fragmentsColl = 'fragments';
 
   List<Fragment> _items = [];
-  List<Fragment> _linkedItems = [];
 
   List<Fragment> get items {
     return [..._items];
-  }
-
-  List<Fragment> get linkedItems {
-    return [..._linkedItems];
   }
 
   Fragment findById(String id) {
@@ -108,31 +103,5 @@ class Fragments with ChangeNotifier {
         notifyListeners();
       }
     }
-  }
-
-  void addLinkedItem(Fragment fragment) {
-    if (!_linkedItems.contains(fragment)) {
-      _linkedItems.add(fragment);
-    }
-  }
-
-  void removeLinkedItem(Fragment fragment) {
-    _linkedItems.removeWhere((element) => element.id == fragment.id);
-  }
-
-  void changeLinkedItems(List<Fragment> fragments) {
-    _linkedItems = fragments;
-  }
-
-  void clearSelectedLinkedItem() {
-    _linkedItems = [];
-  }
-
-  List<String> getStringLinkedItems() {
-    List<String> temps = [];
-    for (var element in _linkedItems) {
-      temps.add(element.id!);
-    }
-    return temps;
   }
 }

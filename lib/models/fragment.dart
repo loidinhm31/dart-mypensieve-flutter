@@ -15,7 +15,7 @@ class Fragment {
   String? title;
   String? description;
   String? note;
-  List<String>? linkedItems;
+  List<String?>? linkedItems;
   DateTime? date;
 
   Fragment({
