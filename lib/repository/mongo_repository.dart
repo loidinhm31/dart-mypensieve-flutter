@@ -66,9 +66,11 @@ class MongoRepository {
   }
 
   Future<void> close() async {
-    // User requested close.
-    await _db!.close();
-    // Detach from finalizer, no longer needed.
-    _finalizer.detach(this);
+    if (_db!.isConnected) {
+      // User requested close.
+      await _db!.close();
+      // Detach from finalizer, no longer needed.
+      _finalizer.detach(this);
+    }
   }
 }

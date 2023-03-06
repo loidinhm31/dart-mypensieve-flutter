@@ -27,6 +27,8 @@ class BaseHiveRepository<T> {
   }
 
   Future<void> close() async {
-    await box.close();
+    if (box.isOpen) {
+      await box.close();
+    }
   }
 }
