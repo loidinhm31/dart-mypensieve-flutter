@@ -53,20 +53,20 @@ class _DetailFragmentScreenWidgetState
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => _handleCancelButton(context),
-          child: const Icon(
+          icon: const Icon(
             Icons.cancel,
           ),
         ),
         actions: [
-          TextButton(
+          IconButton(
             onPressed: () => _handleEditButton(context),
-            child: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit),
           ),
-          TextButton(
+          IconButton(
             onPressed: () => _handleDeleteButton(context, fragmentId),
-            child: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
           ),
         ],
         bottom: PreferredSize(

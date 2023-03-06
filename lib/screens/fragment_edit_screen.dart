@@ -37,9 +37,9 @@ class EditFragmentScreenWidget extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => _handleCancelButton(context),
-          child: const Icon(
+          icon: const Icon(
             Icons.cancel,
           ),
         ),

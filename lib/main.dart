@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
+import 'package:my_pensieve/repository/hive/base_repository.dart';
 import 'package:my_pensieve/repository/hive/fragment_repository.dart';
+import 'package:my_pensieve/repository/hive/local_sync_repository.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
@@ -22,10 +27,12 @@ Future<void> main() async {
   final appDocumentDir = await getApplicationDocumentsDirectory();
 
   Hive
-    ..init(appDocumentDir.path)
-    ..registerAdapter(FragmentHiveAdapter());
+    ..init('${appDocumentDir.path}/pensieve')
+    ..registerAdapter(FragmentHiveAdapter())
+    ..registerAdapter(LocalSyncHiveAdapter());
 
-  await FragmentHiveRepository.init();
+  await BaseHiveRepository.init(FragmentHiveRepository.boxName);
+  await BaseHiveRepository.init(LocalSyncHiveRepository.boxName);
 
   runApp(const MyApp());
 }

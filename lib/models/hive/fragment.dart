@@ -24,7 +24,4 @@ class FragmentHive extends HiveObject {
 
   @HiveField(6)
   DateTime? date;
-
-  @HiveField(7)
-  bool? sync;
 }

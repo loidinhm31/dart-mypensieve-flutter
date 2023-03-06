@@ -1,39 +1,33 @@
 import 'package:hive/hive.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/repository/hive/base_repository.dart';
 
-class FragmentHiveRepository {
-  static String fragmentsBox = 'fragments';
+class FragmentHiveRepository extends BaseHiveRepository<FragmentHive> {
+  static String boxName = 'fragments';
 
   late Box<FragmentHive> box;
 
-  static Future<void> init() async {
-    bool exists = await Hive.boxExists(fragmentsBox);
-    if (!exists) {
-      // Create a box collection
-      await BoxCollection.open(
-        'pensieve', // Name of your database
-        {fragmentsBox}, // Names of your boxes
-        path:
-            './', // Path where to store your boxes (Only used in Flutter / Dart IO)
-      );
-    }
-  }
-
-  Future<void> open() async {
-    await Hive.openBox<FragmentHive>(fragmentsBox);
-    box = Hive.box<FragmentHive>(fragmentsBox);
-  }
-
-  Future<String> add(FragmentHive fragmentHive) async {
+  Future<String> addWithCreatedId(FragmentHive fragmentHive) async {
     fragmentHive.id = mongo.ObjectId().toHexString();
+    fragmentHive.date = fragmentHive.date!.toUtc();
     await box.put(fragmentHive.id, fragmentHive);
     return fragmentHive.id!;
   }
 
-  List<FragmentHive> findAll() {
+  Future<void> addAll(List<FragmentHive> fragmentHives) async {
+    Map<String, FragmentHive> hiveMap = {};
+    for (var element in fragmentHives) {
+      hiveMap.putIfAbsent(element.id!, () => element);
+    }
+    await box.putAll(hiveMap);
+  }
+
+  List<FragmentHive> findAll(bool isSort) {
     List<FragmentHive> results = box.values.toList();
-    results.sort((a, b) => b.date!.compareTo(a.date!));
+    if (isSort) {
+      results.sort((a, b) => b.date!.compareTo(a.date!));
+    }
     return results;
   }
 
@@ -54,11 +48,7 @@ class FragmentHiveRepository {
     return results;
   }
 
-  Future<void> clear() async {
-    await box.clear();
-  }
-
-  Future<void> close() async {
-    await box.close();
+  Future<void> deleteAll(List<String> keys) async {
+    await box.deleteAll(keys);
   }
 }

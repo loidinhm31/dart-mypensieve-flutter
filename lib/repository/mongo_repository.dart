@@ -1,5 +1,8 @@
 import 'package:mongo_dart/mongo_dart.dart';
 
+const String fragmentColl = 'fragments';
+const String deviceSyncColl = 'device_syncs';
+
 class MongoRepository {
   // Keeps the finalizer itself reachable, otherwise it might be disposed
   // before the finalizer callback gets a chance to run.
@@ -36,23 +39,28 @@ class MongoRepository {
     return (data['_id'] as ObjectId).$oid;
   }
 
-  Future<void> update(String collection, Map<String, dynamic> update) async {
+  Future<void> insertAll(
+      String collection, List<Map<String, dynamic>> data) async {
     var coll = _db!.collection(collection);
-
-    var v0 = await coll.findOne(
-        {update['selector']['field'] as String: update['selector']['value']});
-
-    Map<String, dynamic> mapUpdate = update['update'];
-
-    mapUpdate.forEach((key, value) {
-      v0![key] = value;
-    });
-
-    await coll.replaceOne(
-        {update['selector']['field']: update['selector']['value']}, v0!);
+    await coll.insertAll(data);
   }
 
-  Future<void> delete(String collection, Map<String, dynamic> condition) async {
+  Future<void> replaceOne(String collection, Map<String, dynamic> condition,
+      Map<String, dynamic> update) async {
+    var coll = _db!.collection(collection);
+
+    var v0 = await coll.findOne(condition);
+
+    if (v0 != null) {
+      update.forEach((key, value) {
+        v0[key] = value;
+      });
+      await coll.replaceOne(condition, v0);
+    }
+  }
+
+  Future<void> deleteOne(
+      String collection, Map<String, dynamic> condition) async {
     var coll = _db!.collection(collection);
     await coll.deleteOne(condition);
   }

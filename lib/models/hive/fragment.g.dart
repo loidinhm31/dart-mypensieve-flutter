@@ -23,14 +23,13 @@ class FragmentHiveAdapter extends TypeAdapter<FragmentHive> {
       ..description = fields[3] as String?
       ..note = fields[4] as String?
       ..linkedItems = (fields[5] as List?)?.cast<String?>()
-      ..date = fields[6] as DateTime?
-      ..sync = fields[7] as bool?;
+      ..date = fields[6] as DateTime?;
   }
 
   @override
   void write(BinaryWriter writer, FragmentHive obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,9 +43,7 @@ class FragmentHiveAdapter extends TypeAdapter<FragmentHive> {
       ..writeByte(5)
       ..write(obj.linkedItems)
       ..writeByte(6)
-      ..write(obj.date)
-      ..writeByte(7)
-      ..write(obj.sync);
+      ..write(obj.date);
   }
 
   @override

@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/repository/hive/fragment_repository.dart';
+import 'package:my_pensieve/repository/hive/local_sync_repository.dart';
 
 class Fragments with ChangeNotifier {
   final _fragmentsColl = 'fragments';
@@ -19,9 +22,9 @@ class Fragments with ChangeNotifier {
   Future<void> fetchAndSetFragments() async {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
-    await fragmentHiveRepository.open();
+    await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
     try {
-      final fragments = fragmentHiveRepository.findAll();
+      final fragments = fragmentHiveRepository.findAll(true);
 
       if (fragments.isNotEmpty) {
         _items = fragments;
@@ -40,10 +43,18 @@ class Fragments with ChangeNotifier {
   Future<void> addFragment(FragmentHive fragment) async {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
-    await fragmentHiveRepository.open();
+    await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+
+    final LocalSyncHiveRepository localSyncHiveRepository =
+        LocalSyncHiveRepository();
+    await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
 
     try {
-      await fragmentHiveRepository.add(fragment);
+      await fragmentHiveRepository.addWithCreatedId(fragment);
+
+      await localSyncHiveRepository.add('fragments', {
+        LocalSync.ADDED: [fragment.id as String],
+      });
     } catch (error) {
       rethrow;
     } finally {
@@ -51,6 +62,7 @@ class Fragments with ChangeNotifier {
       notifyListeners();
 
       await fragmentHiveRepository.close();
+      await localSyncHiveRepository.close();
     }
   }
 
@@ -60,7 +72,11 @@ class Fragments with ChangeNotifier {
     if (fragmentIndex >= 0) {
       final FragmentHiveRepository fragmentHiveRepository =
           FragmentHiveRepository();
-      await fragmentHiveRepository.open();
+      await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+
+      final LocalSyncHiveRepository localSyncHiveRepository =
+          LocalSyncHiveRepository();
+      await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
 
       FragmentHive? fragmentHive =
           fragmentHiveRepository.findByKey(editFragment.id!);
@@ -72,6 +88,10 @@ class Fragments with ChangeNotifier {
           fragmentHive.note = editFragment.note;
           fragmentHive.date = editFragment.date!.toUtc();
           fragmentHive.save();
+
+          await localSyncHiveRepository.add('fragments', {
+            LocalSync.UPDATED: [fragmentHive.id as String],
+          });
         } catch (error) {
           rethrow;
         } finally {
@@ -79,6 +99,7 @@ class Fragments with ChangeNotifier {
           notifyListeners();
 
           await fragmentHiveRepository.close();
+          await localSyncHiveRepository.close();
         }
       }
     }
@@ -90,18 +111,28 @@ class Fragments with ChangeNotifier {
     if (fragmentIndex >= 0) {
       final FragmentHiveRepository fragmentHiveRepository =
           FragmentHiveRepository();
-      await fragmentHiveRepository.open();
+      await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+
+      final LocalSyncHiveRepository localSyncHiveRepository =
+          LocalSyncHiveRepository();
+      await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
 
       FragmentHive? fragmentHive = fragmentHiveRepository.findByKey(id);
       if (fragmentHive != null) {
         try {
           fragmentHive.delete();
+
+          await localSyncHiveRepository.add('fragments', {
+            LocalSync.DELETED: [fragmentHive.id as String],
+          });
         } catch (error) {
           rethrow;
         } finally {
-          await fragmentHiveRepository.close();
           _items.removeAt(fragmentIndex);
           notifyListeners();
+
+          await fragmentHiveRepository.close();
+          await localSyncHiveRepository.close();
         }
       }
     }
