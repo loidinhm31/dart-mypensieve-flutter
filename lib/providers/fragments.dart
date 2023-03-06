@@ -86,6 +86,7 @@ class Fragments with ChangeNotifier {
           fragmentHive.title = editFragment.title;
           fragmentHive.description = editFragment.description;
           fragmentHive.note = editFragment.note;
+          fragmentHive.linkedItems = editFragment.linkedItems;
           fragmentHive.date = editFragment.date!.toUtc();
           fragmentHive.save();
 
