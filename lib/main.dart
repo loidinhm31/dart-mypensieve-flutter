@@ -16,6 +16,7 @@ import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
+import 'package:my_pensieve/service/sync_service.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
 import 'package:path_provider/path_provider.dart';

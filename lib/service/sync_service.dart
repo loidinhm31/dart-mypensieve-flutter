@@ -12,92 +12,73 @@ import 'package:my_pensieve/repository/mongo_repository.dart';
 import 'package:my_pensieve/util/device_info.dart';
 
 class SyncService {
-  Future<void> syncUpload() async {
-    final FragmentHiveRepository fragmentHiveRepository =
-        FragmentHiveRepository();
-    final LocalSyncHiveRepository localSyncHiveRepository =
-        LocalSyncHiveRepository();
-    final MongoRepository mongoRepository = MongoRepository();
+  late FragmentHiveRepository _fragmentHiveRepository;
+  late LocalSyncHiveRepository _localSyncHiveRepository;
+  late MongoRepository _mongoRepository;
 
+  SyncService() {
+    _fragmentHiveRepository = FragmentHiveRepository();
+    _localSyncHiveRepository = LocalSyncHiveRepository();
+    _mongoRepository = MongoRepository();
+  }
+
+  Future<void> syncUpload() async {
     final String deviceId = await DeviceUtil.deviceId;
 
     try {
-      await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
+      await _localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
 
       final LocalSyncHive unsyncFragments =
-          localSyncHiveRepository.findByObject(fragmentColl);
+          _localSyncHiveRepository.findByObject(fragmentColl);
 
       List<String>? added = unsyncFragments.added;
       List<String>? updated = unsyncFragments.updated;
       List<String>? deleted = unsyncFragments.deleted;
 
-      await mongoRepository.open();
+      await _mongoRepository.open();
 
       // Notify cloud before upload (for non-current devices)
       await _notifyAnotherDevices(
-          mongoRepository, added, updated, deleted, deviceId);
+          _mongoRepository, added, updated, deleted, deviceId);
 
-      await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+      await _fragmentHiveRepository.open(FragmentHiveRepository.boxName);
 
       // Upload
-      List<Map<String, dynamic>> currentDeviceCloudSync =
-          await mongoRepository.find(deviceSyncColl, {
-        LocalSync.DEVICE: deviceId,
-        LocalSync.OBJECT: fragmentColl,
-      });
-      if (currentDeviceCloudSync.isEmpty) {
-        await mongoRepository.insertOne(
-          deviceSyncColl,
-          {
-            LocalSync.DEVICE: deviceId,
-            LocalSync.OBJECT: fragmentColl,
-          },
-        );
+      await _uploadAddedItems(added);
 
-        currentDeviceCloudSync = await mongoRepository.find(deviceSyncColl, {
-          LocalSync.DEVICE: deviceId,
-          LocalSync.OBJECT: fragmentColl,
-        });
-      }
+      await _uploadUpdatedItems(updated);
 
-      await _uploadAddedItems(mongoRepository, fragmentHiveRepository, added);
-
-      await _uploadUpdatedItems(
-          mongoRepository, fragmentHiveRepository, updated);
-
-      await _uploadDeletedItems(
-          mongoRepository, fragmentHiveRepository, deleted);
+      await _uploadDeletedItems(deleted);
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await fragmentHiveRepository.close();
-      await mongoRepository.close();
+      await _fragmentHiveRepository.close();
+      await _mongoRepository.close();
 
       try {
         // Update sync for local hive
-        await _updateLocalHive(localSyncHiveRepository);
+        await _updateLocalHive();
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
       } finally {
-        await localSyncHiveRepository.close();
+        await _localSyncHiveRepository.close();
       }
     }
   }
 
   Future<void> syncDownload() async {
-    final MongoRepository mongoRepository = MongoRepository();
-    final FragmentHiveRepository fragmentHiveRepository =
-        FragmentHiveRepository();
+    _mongoRepository = MongoRepository();
+    _fragmentHiveRepository = FragmentHiveRepository();
 
     final String deviceId = await DeviceUtil.deviceId;
 
     try {
-      await mongoRepository.open();
+      await _mongoRepository.open();
 
       List<Map<String, dynamic>> unsyncFragments =
-          await mongoRepository.find(deviceSyncColl, {
+          await _mongoRepository.find(deviceSyncColl, {
         LocalSync.DEVICE: deviceId,
         LocalSync.OBJECT: fragmentColl,
       });
@@ -113,31 +94,72 @@ class SyncService {
             ? List<String>.from(unsyncFragments[0][LocalSync.DELETED]).toList()
             : [];
 
-        await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+        await _fragmentHiveRepository.open(FragmentHiveRepository.boxName);
 
-        await _downloadAddedItems(
-            mongoRepository, fragmentHiveRepository, added);
+        await _downloadAddedItems(added);
 
-        await _downloadUpdatedItems(
-            mongoRepository, fragmentHiveRepository, updated);
+        await _downloadUpdatedItems(updated);
 
-        await _downloadDeletedItems(fragmentHiveRepository, deleted);
+        await _downloadDeletedItems(deleted);
       }
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await fragmentHiveRepository.close();
+      await _fragmentHiveRepository.close();
 
       try {
         // Remove in cloud sync collection
-        await _removeFromCloudForThisDevice(mongoRepository, deviceId);
+        await _removeFromCloudForThisDevice(deviceId);
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
       } finally {
-        await mongoRepository.close();
+        await _mongoRepository.close();
       }
+    }
+  }
+
+  Future<void> initCloudObject() async {
+    try {
+      await _mongoRepository.open();
+      final String deviceId = await DeviceUtil.deviceId;
+
+      List<Map<String, dynamic>> currentDeviceCloudSync =
+          await _mongoRepository.find(deviceSyncColl, {
+        LocalSync.DEVICE: deviceId,
+        LocalSync.OBJECT: fragmentColl,
+      });
+
+      if (currentDeviceCloudSync.isEmpty) {
+        // Find all items from cloud
+        List<Map<String, dynamic>> cloudItems =
+            await _mongoRepository.find(fragmentColl, {});
+
+        List<String> ids = [];
+        for (var element in cloudItems) {
+          ids.add((element[Fragment.ID] as ObjectId).$oid);
+        }
+
+        // Add new device with object to cloud
+        await _mongoRepository.insertOne(
+          deviceSyncColl,
+          {
+            LocalSync.DEVICE: deviceId,
+            LocalSync.OBJECT: fragmentColl,
+            LocalSync.ADDED: ids,
+          },
+        );
+        currentDeviceCloudSync = await _mongoRepository.find(deviceSyncColl, {
+          LocalSync.DEVICE: deviceId,
+          LocalSync.OBJECT: fragmentColl,
+        });
+      }
+    } catch (error, stack) {
+      log('Error: $error');
+      log('StackTrace: $stack');
+    } finally {
+      _mongoRepository.close();
     }
   }
 
@@ -203,13 +225,10 @@ class SyncService {
     }
   }
 
-  Future<void> _uploadAddedItems(
-      MongoRepository mongoRepository,
-      FragmentHiveRepository fragmentHiveRepository,
-      List<String>? added) async {
+  Future<void> _uploadAddedItems(List<String>? added) async {
     if (added != null && added.isNotEmpty) {
       List<FragmentHive> fragmentHives =
-          fragmentHiveRepository.findAllByKeys(added);
+          _fragmentHiveRepository.findAllByKeys(added);
       // Insert
       List<Map<String, dynamic>> maps = [];
       for (var element in fragmentHives) {
@@ -224,19 +243,16 @@ class SyncService {
         });
       }
       // Excecute upload added data
-      await mongoRepository.insertAll(fragmentColl, maps);
+      await _mongoRepository.insertAll(fragmentColl, maps);
     }
   }
 
-  Future<void> _uploadUpdatedItems(
-      MongoRepository mongoRepository,
-      FragmentHiveRepository fragmentHiveRepository,
-      List<String>? updated) async {
+  Future<void> _uploadUpdatedItems(List<String>? updated) async {
     if (updated != null && updated.isNotEmpty) {
       List<FragmentHive> fragmentHives =
-          fragmentHiveRepository.findAllByKeys(updated);
+          _fragmentHiveRepository.findAllByKeys(updated);
       for (var element in fragmentHives) {
-        mongoRepository.replaceOne(
+        await _mongoRepository.replaceOne(
           fragmentColl,
           {Fragment.ID: ObjectId.parse(element.id as String)},
           {
@@ -252,30 +268,25 @@ class SyncService {
     }
   }
 
-  Future<void> _uploadDeletedItems(
-      MongoRepository mongoRepository,
-      FragmentHiveRepository fragmentHiveRepository,
-      List<String>? deleted) async {
+  Future<void> _uploadDeletedItems(List<String>? deleted) async {
     if (deleted != null && deleted.isNotEmpty) {
       for (var id in deleted) {
-        await mongoRepository.deleteOne(
+        await _mongoRepository.deleteOne(
             fragmentColl, {Fragment.ID: ObjectId.parse(id as String)});
       }
     }
   }
 
-  Future<void> _updateLocalHive(
-      LocalSyncHiveRepository localSyncHiveRepository) async {
+  Future<void> _updateLocalHive() async {
     final LocalSyncHive fragmentsLocal =
-        localSyncHiveRepository.findByObject(fragmentColl);
+        _localSyncHiveRepository.findByObject(fragmentColl);
     fragmentsLocal.added = [];
     fragmentsLocal.updated = [];
     fragmentsLocal.deleted = [];
     fragmentsLocal.save();
   }
 
-  Future<void> _downloadAddedItems(MongoRepository mongoRepository,
-      FragmentHiveRepository fragmentHiveRepository, List<String> added) async {
+  Future<void> _downloadAddedItems(List<String> added) async {
     if (added.isNotEmpty) {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in added) {
@@ -284,7 +295,7 @@ class SyncService {
 
       // Get added data from cloud
       List<Map<String, dynamic>> addedFragments =
-          await mongoRepository.find(fragmentColl, {
+          await _mongoRepository.find(fragmentColl, {
         '\$or': orCondition,
       });
 
@@ -302,14 +313,11 @@ class SyncService {
             .parse(e[Fragment.DATE]);
         return f;
       }).toList();
-      await fragmentHiveRepository.addAll(fragments);
+      await _fragmentHiveRepository.addAll(fragments);
     }
   }
 
-  Future<void> _downloadUpdatedItems(
-      MongoRepository mongoRepository,
-      FragmentHiveRepository fragmentHiveRepository,
-      List<String> updated) async {
+  Future<void> _downloadUpdatedItems(List<String> updated) async {
     if (updated.isNotEmpty) {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in updated) {
@@ -317,12 +325,12 @@ class SyncService {
       }
       // Get added data from cloud
       List<Map<String, dynamic>> updatedFragments =
-          await mongoRepository.find(fragmentColl, {
+          await _mongoRepository.find(fragmentColl, {
         '\$or': orCondition,
       });
 
       final List<FragmentHive> fragments =
-          fragmentHiveRepository.findAllByKeys(updated);
+          _fragmentHiveRepository.findAllByKeys(updated);
 
       for (var updatedFragment in updatedFragments) {
         String hexStringId = (updatedFragment[Fragment.ID] as ObjectId).$oid;
@@ -342,17 +350,14 @@ class SyncService {
     }
   }
 
-  Future<void> _downloadDeletedItems(
-      FragmentHiveRepository fragmentHiveRepository,
-      List<String> deleted) async {
+  Future<void> _downloadDeletedItems(List<String> deleted) async {
     if (deleted.isNotEmpty) {
-      await fragmentHiveRepository.deleteAll(deleted);
+      await _fragmentHiveRepository.deleteAll(deleted);
     }
   }
 
-  Future<void> _removeFromCloudForThisDevice(
-      MongoRepository mongoRepository, String deviceId) async {
-    await mongoRepository.replaceOne(
+  Future<void> _removeFromCloudForThisDevice(String deviceId) async {
+    await _mongoRepository.replaceOne(
       deviceSyncColl,
       {
         LocalSync.DEVICE: deviceId,

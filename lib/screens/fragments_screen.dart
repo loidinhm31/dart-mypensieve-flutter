@@ -11,12 +11,12 @@ class FragmentListScreenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SyncService syncService = SyncService();
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () async {
             try {
-              SyncService syncService = SyncService();
               await syncService.syncDownload();
               await syncService.syncUpload();
             } finally {
@@ -28,6 +28,16 @@ class FragmentListScreenWidget extends StatelessWidget {
             Icons.refresh,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await syncService.initCloudObject();
+            },
+            icon: const Icon(
+              Icons.cloud_sync,
+            ),
+          ),
+        ],
       ),
       body: const FragmentListWidget(),
     );
