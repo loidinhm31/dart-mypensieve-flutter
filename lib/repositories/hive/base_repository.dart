@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
 
 class BaseHiveRepository<T> {
   late Box<T> box;

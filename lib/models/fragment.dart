@@ -3,7 +3,7 @@ import 'package:mongo_dart/mongo_dart.dart';
 
 class Fragment {
   static const String ID = '_id';
-  static const String CATEGORY = 'category';
+  static const String CATEGORY_ID = 'category_id';
   static const String TITLE = 'title';
   static const String DESCRIPTION = 'description';
   static const String NOTE = 'note';
@@ -11,7 +11,7 @@ class Fragment {
   static const String DATE = 'date';
 
   String? id;
-  String? category;
+  String? categoryId;
   String? title;
   String? description;
   String? note;
@@ -20,7 +20,7 @@ class Fragment {
 
   Fragment({
     this.id,
-    required this.category,
+    required this.categoryId,
     required this.title,
     required this.description,
     this.note,
@@ -30,7 +30,7 @@ class Fragment {
 
   Map<String, dynamic> toMap() {
     var map = <String, Object?>{
-      CATEGORY: category,
+      CATEGORY_ID: categoryId,
       TITLE: title,
       DESCRIPTION: description,
       NOTE: note,
@@ -45,7 +45,7 @@ class Fragment {
 
   Map<String, dynamic> toMapUpdate() {
     var map = <String, dynamic>{
-      CATEGORY: category,
+      CATEGORY_ID: categoryId,
       TITLE: title,
       DESCRIPTION: description,
       NOTE: note,
@@ -57,7 +57,7 @@ class Fragment {
 
   Fragment.fromMap(Map<String, Object?> map) {
     id = (map[ID] as ObjectId).$oid;
-    category = map[CATEGORY] as String?;
+    categoryId = map[CATEGORY_ID] as String?;
     title = map[TITLE] as String?;
     description = map[DESCRIPTION] as String?;
     note = map[NOTE] as String?;

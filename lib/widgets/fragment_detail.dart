@@ -56,7 +56,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(6),
                 child: FittedBox(
                   child: Text(
-                    widget.fragment.category!,
+                    widget.fragment.categoryName!,
                     style: theme.textTheme.labelLarge,
                   ),
                 ),

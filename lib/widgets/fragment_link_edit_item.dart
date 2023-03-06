@@ -71,7 +71,7 @@ class _LinkFragmentEditItemWidgetState
                 child: Padding(
                   padding: const EdgeInsets.all(5.0),
                   child: FittedBox(
-                    child: Text(widget.fragment.category!,
+                    child: Text(widget.fragment.categoryId!,
                         style: widget.theme.textTheme.labelLarge),
                   ),
                 ),

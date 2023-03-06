@@ -7,10 +7,10 @@ import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/models/user.dart';
-import 'package:my_pensieve/repository/hive/fragment_repository.dart';
-import 'package:my_pensieve/repository/hive/local_sync_repository.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
-import 'package:my_pensieve/util/device_info.dart';
+import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
+import 'package:my_pensieve/repositories/mongo_repository.dart';
+import 'package:my_pensieve/utils/device_info.dart';
 
 class SyncService {
   late FragmentHiveRepository _fragmentHiveRepository;
@@ -237,7 +237,7 @@ class SyncService {
         maps.add({
           Fragment.ID: ObjectId.parse(element.id as String),
           USER_ID: userId,
-          Fragment.CATEGORY: element.category,
+          Fragment.CATEGORY_ID: element.categoryId,
           Fragment.TITLE: element.title,
           Fragment.DESCRIPTION: element.description,
           Fragment.NOTE: element.note,
@@ -262,7 +262,7 @@ class SyncService {
             USER_ID: userId,
           },
           {
-            Fragment.CATEGORY: element.category,
+            Fragment.CATEGORY_ID: element.categoryId,
             Fragment.TITLE: element.title,
             Fragment.DESCRIPTION: element.description,
             Fragment.NOTE: element.note,
@@ -313,7 +313,7 @@ class SyncService {
       List<FragmentHive> fragments = addedFragments.map((e) {
         FragmentHive f = FragmentHive();
         f.id = (e[Fragment.ID] as ObjectId).$oid;
-        f.category = e[Fragment.CATEGORY];
+        f.categoryId = e[Fragment.CATEGORY_ID];
         f.title = e[Fragment.TITLE];
         f.description = e[Fragment.DESCRIPTION];
         f.note = e[Fragment.NOTE] ?? '';
@@ -352,7 +352,7 @@ class SyncService {
         FragmentHive f = fragments
             .firstWhere((currFragment) => currFragment.id == hexStringId);
         f.id = hexStringId;
-        f.category = updatedFragment[Fragment.CATEGORY];
+        f.categoryId = updatedFragment[Fragment.CATEGORY_ID];
         f.title = updatedFragment[Fragment.TITLE];
         f.note = updatedFragment[Fragment.NOTE];
         f.linkedItems = updatedFragment[Fragment.LINKED_ITEMS] != null

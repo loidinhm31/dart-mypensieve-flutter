@@ -8,7 +8,7 @@ part of 'fragment.dart';
 
 class FragmentHiveAdapter extends TypeAdapter<FragmentHive> {
   @override
-  final int typeId = 0;
+  final int typeId = 1;
 
   @override
   FragmentHive read(BinaryReader reader) {
@@ -18,7 +18,7 @@ class FragmentHiveAdapter extends TypeAdapter<FragmentHive> {
     };
     return FragmentHive()
       ..id = fields[0] as String?
-      ..category = fields[1] as String?
+      ..categoryId = fields[1] as String?
       ..title = fields[2] as String?
       ..description = fields[3] as String?
       ..note = fields[4] as String?
@@ -33,7 +33,7 @@ class FragmentHiveAdapter extends TypeAdapter<FragmentHive> {
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.category)
+      ..write(obj.categoryId)
       ..writeByte(2)
       ..write(obj.title)
       ..writeByte(3)

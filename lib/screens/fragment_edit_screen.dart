@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 class EditFragmentScreenWidget extends StatelessWidget {
   EditFragmentScreenWidget({super.key});
 
-  static const routeName = '/fragment-new';
+  static const routeName = '/fragment-edit';
 
   final CustomController customController = CustomController();
 

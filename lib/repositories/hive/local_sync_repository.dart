@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/local_sync.dart';
-import 'package:my_pensieve/repository/hive/base_repository.dart';
+import 'package:my_pensieve/repositories/hive/base_repository.dart';
 
 class LocalSyncHiveRepository extends BaseHiveRepository<LocalSyncHive> {
   static String boxName = 'localsyncs';

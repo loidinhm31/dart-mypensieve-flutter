@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
-import 'package:my_pensieve/service/sync_service.dart';
+import 'package:my_pensieve/services/sync_service.dart';
 import 'package:my_pensieve/widgets/fragment_list.dart';
 import 'package:provider/provider.dart';
 

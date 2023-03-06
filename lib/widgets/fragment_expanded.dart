@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/repository/hive/fragment_repository.dart';
+import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
 import 'package:my_pensieve/widgets/fragment_link_view_item.dart';
 
 class ExpandedFragmentWidget extends StatelessWidget {

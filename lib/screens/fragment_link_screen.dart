@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';

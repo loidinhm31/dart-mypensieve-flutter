@@ -2,13 +2,15 @@ import 'package:hive/hive.dart';
 
 part 'fragment.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 1)
 class FragmentHive extends HiveObject {
   @HiveField(0)
   String? id;
 
   @HiveField(1)
-  String? category;
+  String? categoryId;
+
+  String? categoryName;
 
   @HiveField(2)
   String? title;

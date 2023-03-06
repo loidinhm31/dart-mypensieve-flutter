@@ -1,9 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:my_pensieve/models/device_sync.dart';
+import 'package:my_pensieve/models/hive/category.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/models/hive/local_sync.dart';
-import 'package:my_pensieve/repository/hive/fragment_repository.dart';
-import 'package:my_pensieve/repository/hive/local_sync_repository.dart';
+import 'package:my_pensieve/repositories/hive/category_repository.dart';
+import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 
 class Fragments with ChangeNotifier {
   final _fragmentsColl = 'fragments';
@@ -23,8 +24,19 @@ class Fragments with ChangeNotifier {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
     await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+
+    final CategoryHiveRepository categoryHiveRepository =
+        CategoryHiveRepository();
+    await categoryHiveRepository.open(CategoryHiveRepository.boxName);
+
     try {
+      final categories = categoryHiveRepository.findAll();
+
       final fragments = fragmentHiveRepository.findAll(true);
+      for (var f in fragments) {
+        CategoryHive c = categories.firstWhere((c1) => c1.id == f.categoryId);
+        f.categoryName = c.name;
+      }
 
       if (fragments.isNotEmpty) {
         _items = fragments;
@@ -50,10 +62,10 @@ class Fragments with ChangeNotifier {
     await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
 
     try {
-      await fragmentHiveRepository.addWithCreatedId(fragment);
+      String id = await fragmentHiveRepository.addOneWithCreatedId(fragment);
 
       await localSyncHiveRepository.add('fragments', {
-        LocalSync.ADDED: [fragment.id as String],
+        LocalSync.ADDED: [id],
       });
     } catch (error) {
       rethrow;
@@ -82,7 +94,7 @@ class Fragments with ChangeNotifier {
           fragmentHiveRepository.findByKey(editFragment.id!);
       if (fragmentHive != null) {
         try {
-          fragmentHive.category = editFragment.category;
+          fragmentHive.categoryId = editFragment.categoryId;
           fragmentHive.title = editFragment.title;
           fragmentHive.description = editFragment.description;
           fragmentHive.note = editFragment.note;

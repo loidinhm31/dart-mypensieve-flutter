@@ -39,7 +39,7 @@ class LinkFragmentViewItemWidget extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(5.0),
                   child: FittedBox(
-                    child: Text(fragment.category!,
+                    child: Text(fragment.categoryId!,
                         style: theme.textTheme.labelLarge),
                   ),
                 ),

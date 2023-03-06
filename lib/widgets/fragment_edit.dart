@@ -3,11 +3,14 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
+import 'package:my_pensieve/models/hive/category.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
+import 'package:my_pensieve/screens/category_select_screen.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
+import 'package:my_pensieve/services/category_service.dart';
 import 'package:provider/provider.dart';
 
 class EditFragmentWidget extends StatefulWidget {
@@ -27,10 +30,13 @@ class EditFragmentWidget extends StatefulWidget {
 
 class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _fragmentForm = GlobalKey<FormState>();
+  late CategoryService _categoryService;
 
   late FragmentHive _editedFragment;
+  late CategoryHive _currCategory;
   bool _isInit = true;
 
+  final _categoryController = TextEditingController();
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
   final _linkFragmentsController = TextEditingController();
@@ -42,6 +48,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   @override
   void initState() {
     super.initState();
+    _categoryService = CategoryService();
     widget.customController.handleController = saveForm;
   }
 
@@ -71,12 +78,22 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
           }
         }
 
+        // Init for category
+        _categoryService
+            .getCategoryById(_editedFragment.categoryId!)
+            .then((value) {
+          _currCategory = value;
+          _categoryController.text = _currCategory.name!;
+        });
+
         // Init for linked items
         _linkedIds = _editedFragment.linkedItems!;
         _linkFragmentsController.text = _linkedIds.join(" - ");
       } else {
-        _selectedDate = DateTime.now();
         _editedFragment = FragmentHive();
+        _currCategory = CategoryHive();
+
+        _selectedDate = DateTime.now();
         _editedFragment.date = _selectedDate;
       }
       _dateController.text =
@@ -214,7 +231,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                   color: Colors.white,
                 ),
                 TextFormField(
-                  initialValue: _editedFragment.category,
+                  controller: _categoryController,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     labelStyle: theme.textTheme.labelLarge,
@@ -232,8 +249,23 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     }
                     return null;
                   },
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(CategorySelectScreenWidget.routeName,
+                          arguments: _currCategory.id)
+                      .then((value) {
+                    if (value != null && (value as String).isNotEmpty) {
+                      setState(() {
+                        if (_currCategory.id != value) {
+                          _categoryService.getCategoryById(value).then((c) {
+                            _currCategory = c;
+                            _categoryController.text = _currCategory.name!;
+                          });
+                        }
+                      });
+                    }
+                  }),
                   onSaved: (newValue) {
-                    _editedFragment.category = newValue;
+                    _editedFragment.categoryId = _currCategory.id;
                   },
                 ),
               ),

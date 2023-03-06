@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'local_sync.g.dart';
 
-@HiveType(typeId: 1)
+@HiveType(typeId: 0)
 class LocalSyncHive extends HiveObject {
   @HiveField(1)
   String? object;

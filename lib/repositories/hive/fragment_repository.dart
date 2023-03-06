@@ -1,14 +1,14 @@
 import 'package:hive/hive.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/repository/hive/base_repository.dart';
+import 'package:my_pensieve/repositories/hive/base_repository.dart';
 
 class FragmentHiveRepository extends BaseHiveRepository<FragmentHive> {
   static String boxName = 'fragments';
 
   late Box<FragmentHive> box;
 
-  Future<String> addWithCreatedId(FragmentHive fragmentHive) async {
+  Future<String> addOneWithCreatedId(FragmentHive fragmentHive) async {
     fragmentHive.id = mongo.ObjectId().toHexString();
     fragmentHive.date = fragmentHive.date!.toUtc();
     await box.put(fragmentHive.id, fragmentHive);
