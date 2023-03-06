@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/service/sync_service.dart';
 import 'package:my_pensieve/widgets/fragment_list.dart';
@@ -11,14 +12,17 @@ class FragmentListScreenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SyncService syncService = SyncService();
+    final SyncService syncService = SyncService();
+
+    final userId = Provider.of<Auth>(context).user.id;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () async {
             try {
-              await syncService.syncDownload();
-              await syncService.syncUpload();
+              await syncService.syncDownload(userId!);
+              await syncService.syncUpload(userId);
             } finally {
               await Provider.of<Fragments>(context, listen: false)
                   .fetchAndSetFragments();
@@ -31,7 +35,7 @@ class FragmentListScreenWidget extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () async {
-              await syncService.initCloudObject();
+              await syncService.initCloudObject(userId!);
             },
             icon: const Icon(
               Icons.cloud_sync,
