@@ -1,6 +1,7 @@
 class Category {
-  static const String ID = '_id';
-  static const String NAME = 'name';
+  static const String collection = 'categories';
+
+  static const String fname = 'name';
 
   String? id;
   String? name;

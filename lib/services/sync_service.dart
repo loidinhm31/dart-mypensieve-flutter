@@ -1,24 +1,24 @@
 import 'dart:developer';
 
-import 'package:intl/intl.dart';
 import 'package:mongo_dart/mongo_dart.dart';
+import 'package:my_pensieve/models/base.dart';
 import 'package:my_pensieve/models/device_sync.dart';
-import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/models/hive/local_sync.dart';
-import 'package:my_pensieve/models/user.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/repositories/hive/base_repository.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 import 'package:my_pensieve/repositories/mongo_repository.dart';
 import 'package:my_pensieve/utils/device_info.dart';
 
-class SyncService {
-  late FragmentHiveRepository _fragmentHiveRepository;
+class SyncService<T extends BaseHiveRepository?> {
+  late BaseHiveRepository _syncHiveRepository;
   late LocalSyncHiveRepository _localSyncHiveRepository;
   late MongoRepository _mongoRepository;
+  final String? _collection;
 
-  SyncService() {
-    _fragmentHiveRepository = FragmentHiveRepository();
+  SyncService([this._collection, T Function()? creator]) {
+    if (creator != null) {
+      _syncHiveRepository = creator()!;
+    }
     _localSyncHiveRepository = LocalSyncHiveRepository();
     _mongoRepository = MongoRepository();
   }
@@ -27,21 +27,21 @@ class SyncService {
     final String deviceId = await DeviceUtil.deviceId;
 
     try {
-      await _localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
+      await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
 
-      final LocalSyncHive unsyncFragments =
-          _localSyncHiveRepository.findByObject(fragmentColl);
+      final LocalSyncHive unsyncObjects =
+          _localSyncHiveRepository.findByObject(_collection!);
 
-      List<String>? added = unsyncFragments.added;
-      List<String>? updated = unsyncFragments.updated;
-      List<String>? deleted = unsyncFragments.deleted;
+      List<String>? added = unsyncObjects.added;
+      List<String>? updated = unsyncObjects.updated;
+      List<String>? deleted = unsyncObjects.deleted;
 
       await _mongoRepository.open();
 
       // Notify cloud before upload (for non-current devices)
       await _notifyAnotherDevices(userId, added, updated, deleted, deviceId);
 
-      await _fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+      await _syncHiveRepository.open(_syncHiveRepository.boxName);
 
       // Upload
       await _uploadAddedItems(userId, added);
@@ -53,7 +53,7 @@ class SyncService {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await _fragmentHiveRepository.close();
+      await _syncHiveRepository.close();
       await _mongoRepository.close();
 
       try {
@@ -69,33 +69,30 @@ class SyncService {
   }
 
   Future<void> syncDownload(String userId) async {
-    _mongoRepository = MongoRepository();
-    _fragmentHiveRepository = FragmentHiveRepository();
-
     final String deviceId = await DeviceUtil.deviceId;
 
     try {
       await _mongoRepository.open();
 
-      List<Map<String, dynamic>> unsyncFragments =
-          await _mongoRepository.find(deviceSyncColl, {
-        USER_ID: userId,
-        LocalSync.DEVICE: deviceId,
-        LocalSync.OBJECT: fragmentColl,
+      List<Map<String, dynamic>> unsyncObjects =
+          await _mongoRepository.find(LocalSync.collection, {
+        BaseModel.fUserId: userId,
+        LocalSync.fDevice: deviceId,
+        LocalSync.fObject: _collection,
       });
 
-      if (unsyncFragments.isNotEmpty) {
-        List<String> added = unsyncFragments[0][LocalSync.ADDED] != null
-            ? List<String>.from(unsyncFragments[0][LocalSync.ADDED]).toList()
+      if (unsyncObjects.isNotEmpty) {
+        List<String> added = unsyncObjects[0][LocalSync.fAdded] != null
+            ? List<String>.from(unsyncObjects[0][LocalSync.fAdded]).toList()
             : [];
-        List<String> updated = unsyncFragments[0][LocalSync.UPDATED] != null
-            ? List<String>.from(unsyncFragments[0][LocalSync.UPDATED]).toList()
+        List<String> updated = unsyncObjects[0][LocalSync.fUpdated] != null
+            ? List<String>.from(unsyncObjects[0][LocalSync.fUpdated]).toList()
             : [];
-        List<String> deleted = unsyncFragments[0][LocalSync.DELETED] != null
-            ? List<String>.from(unsyncFragments[0][LocalSync.DELETED]).toList()
+        List<String> deleted = unsyncObjects[0][LocalSync.fDeleted] != null
+            ? List<String>.from(unsyncObjects[0][LocalSync.fDeleted]).toList()
             : [];
 
-        await _fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+        await _syncHiveRepository.open(_syncHiveRepository.boxName);
 
         await _downloadAddedItems(userId, added);
 
@@ -107,7 +104,7 @@ class SyncService {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await _fragmentHiveRepository.close();
+      await _syncHiveRepository.close();
 
       try {
         // Remove in cloud sync collection
@@ -121,51 +118,72 @@ class SyncService {
     }
   }
 
-  Future<void> initCloudObject(String userId) async {
+  Future<void> initCloudObjects(
+      String userId, List<String> objectCollections) async {
     try {
       await _mongoRepository.open();
+      await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
       final String deviceId = await DeviceUtil.deviceId;
 
-      List<Map<String, dynamic>> currentDeviceCloudSync =
-          await _mongoRepository.find(deviceSyncColl, {
-        USER_ID: userId,
-        LocalSync.DEVICE: deviceId,
-        LocalSync.OBJECT: fragmentColl,
-      });
+      for (var coll in objectCollections) {
+        await initCloud(userId, deviceId, coll);
 
-      if (currentDeviceCloudSync.isEmpty) {
-        // Find all items from cloud
-        List<Map<String, dynamic>> cloudItems =
-            await _mongoRepository.find(fragmentColl, {
-          USER_ID: userId,
-        });
-
-        List<String> ids = [];
-        for (var element in cloudItems) {
-          ids.add((element[Fragment.ID] as ObjectId).$oid);
-        }
-
-        // Add new device with object to cloud
-        await _mongoRepository.insertOne(
-          deviceSyncColl,
-          {
-            USER_ID: userId,
-            LocalSync.DEVICE: deviceId,
-            LocalSync.OBJECT: fragmentColl,
-            LocalSync.ADDED: ids,
-          },
-        );
-        currentDeviceCloudSync = await _mongoRepository.find(deviceSyncColl, {
-          LocalSync.DEVICE: deviceId,
-          LocalSync.OBJECT: fragmentColl,
-        });
+        await initLocal(coll);
       }
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      _mongoRepository.close();
+      await _mongoRepository.close();
+      await _localSyncHiveRepository.close();
     }
+  }
+
+  Future<void> initCloud(
+      String userId, String deviceId, String collection) async {
+    List<Map<String, dynamic>> currentDeviceWithObjectCloudSync =
+        await _mongoRepository.find(LocalSync.collection, {
+      BaseModel.fUserId: userId,
+      LocalSync.fDevice: deviceId,
+      LocalSync.fObject: collection,
+    });
+
+    if (currentDeviceWithObjectCloudSync.isEmpty) {
+      // Find all items from cloud
+      List<Map<String, dynamic>> cloudItems =
+          await _mongoRepository.find(collection, {
+        BaseModel.fUserId: userId,
+      });
+
+      List<String> ids = [];
+      for (var element in cloudItems) {
+        ids.add((element[BaseModel.fId] as ObjectId).$oid);
+      }
+
+      // Add new device with object to cloud
+      await _mongoRepository.insertOne(
+        LocalSync.collection,
+        {
+          BaseModel.fUserId: userId,
+          LocalSync.fDevice: deviceId,
+          LocalSync.fObject: collection,
+          LocalSync.fAdded: ids,
+        },
+      );
+      currentDeviceWithObjectCloudSync =
+          await _mongoRepository.find(LocalSync.collection, {
+        LocalSync.fDevice: deviceId,
+        LocalSync.fObject: collection,
+      });
+    }
+  }
+
+  Future<void> initLocal(String coll) async {
+    await _localSyncHiveRepository.add(coll, {
+      LocalSync.fAdded: <String>[],
+      LocalSync.fUpdated: <String>[],
+      LocalSync.fDeleted: <String>[],
+    });
   }
 
   Future<void> _notifyAnotherDevices(String userId, List<String>? added,
@@ -173,55 +191,62 @@ class SyncService {
     Map<String, dynamic> nonCurrentDeviceCondition = {
       '\$and': [
         {
-          USER_ID: userId,
-          LocalSync.DEVICE: {
+          BaseModel.fUserId: userId,
+          LocalSync.fDevice: {
             '\$nin': [deviceId]
           },
         }
       ]
     };
     List<Map<String, dynamic>> nonCurrentDevicesCloudSync =
-        await _mongoRepository.find(deviceSyncColl, nonCurrentDeviceCondition);
+        await _mongoRepository.find(
+            LocalSync.collection, nonCurrentDeviceCondition);
 
     // Change fields for non-current devices
     for (var device in nonCurrentDevicesCloudSync) {
-      List<String> newAdded = device[LocalSync.ADDED] != null
-          ? List.from(device[LocalSync.ADDED])
+      List<String> newAdded = device[LocalSync.fAdded] != null
+          ? List.from(device[LocalSync.fAdded])
           : [];
 
       if (newAdded.isNotEmpty) {
-        newAdded.addAll(added!);
+        if (added != null && added.isNotEmpty) {
+          newAdded.addAll(added);
+        }
       } else {
-        newAdded = added!;
+        newAdded = added ?? [];
       }
 
-      List<String> newUpdated = device[LocalSync.UPDATED] != null
-          ? List.from(device[LocalSync.UPDATED])
+      List<String> newUpdated = device[LocalSync.fUpdated] != null
+          ? List.from(device[LocalSync.fUpdated])
           : [];
       if (newUpdated.isNotEmpty) {
-        newUpdated.addAll(updated!);
+        if (updated != null && updated.isNotEmpty) {
+          newUpdated.addAll(updated);
+        }
       } else {
-        newUpdated = updated!;
+        newUpdated = updated ?? [];
       }
 
-      List<String> newDeleted = device[LocalSync.DELETED] != null
-          ? List.from(device[LocalSync.DELETED])
+      List<String> newDeleted = device[LocalSync.fDeleted] != null
+          ? List.from(device[LocalSync.fDeleted])
           : [];
       if (newDeleted.isNotEmpty) {
-        newDeleted.addAll(deleted!);
+        if (deleted != null && deleted.isNotEmpty) {
+          newDeleted.addAll(deleted);
+        }
       } else {
-        newDeleted = deleted!;
+        newDeleted = deleted ?? [];
       }
       await _mongoRepository.replaceOne(
-        deviceSyncColl,
+        LocalSync.collection,
         {
-          LocalSync.DEVICE: device[LocalSync.DEVICE],
-          LocalSync.OBJECT: fragmentColl,
+          LocalSync.fDevice: device[LocalSync.fDevice],
+          LocalSync.fObject: _collection,
         },
         {
-          LocalSync.ADDED: newAdded,
-          LocalSync.UPDATED: newUpdated,
-          LocalSync.DELETED: newDeleted,
+          LocalSync.fAdded: newAdded,
+          LocalSync.fUpdated: newUpdated,
+          LocalSync.fDeleted: newDeleted,
         },
       );
     }
@@ -229,46 +254,28 @@ class SyncService {
 
   Future<void> _uploadAddedItems(String userId, List<String>? added) async {
     if (added != null && added.isNotEmpty) {
-      List<FragmentHive> fragmentHives =
-          _fragmentHiveRepository.findAllByKeys(added);
+      List objectHives = _syncHiveRepository.findAllByKeys(added);
       // Insert
       List<Map<String, dynamic>> maps = [];
-      for (var element in fragmentHives) {
-        maps.add({
-          Fragment.ID: ObjectId.parse(element.id as String),
-          USER_ID: userId,
-          Fragment.CATEGORY_ID: element.categoryId,
-          Fragment.TITLE: element.title,
-          Fragment.DESCRIPTION: element.description,
-          Fragment.NOTE: element.note,
-          Fragment.LINKED_ITEMS: element.linkedItems,
-          Fragment.DATE: element.date!.toIso8601String(),
-        });
+      for (var element in objectHives) {
+        maps.add(element.toMap(userId));
       }
       // Excecute upload added data
-      await _mongoRepository.insertAll(fragmentColl, maps);
+      await _mongoRepository.insertAll(_collection!, maps);
     }
   }
 
   Future<void> _uploadUpdatedItems(String userId, List<String>? updated) async {
     if (updated != null && updated.isNotEmpty) {
-      List<FragmentHive> fragmentHives =
-          _fragmentHiveRepository.findAllByKeys(updated);
-      for (var element in fragmentHives) {
+      List objectHives = _syncHiveRepository.findAllByKeys(updated);
+      for (var element in objectHives) {
         await _mongoRepository.replaceOne(
-          fragmentColl,
+          _collection!,
           {
-            Fragment.ID: ObjectId.parse(element.id as String),
-            USER_ID: userId,
+            BaseModel.fId: ObjectId.parse(element.$id!),
+            BaseModel.fUserId: userId,
           },
-          {
-            Fragment.CATEGORY_ID: element.categoryId,
-            Fragment.TITLE: element.title,
-            Fragment.DESCRIPTION: element.description,
-            Fragment.NOTE: element.note,
-            Fragment.LINKED_ITEMS: element.linkedItems,
-            Fragment.DATE: element.date!.toIso8601String(),
-          },
+          element.toMapUpdate(),
         );
       }
     }
@@ -277,21 +284,21 @@ class SyncService {
   Future<void> _uploadDeletedItems(String userId, List<String>? deleted) async {
     if (deleted != null && deleted.isNotEmpty) {
       for (var id in deleted) {
-        await _mongoRepository.deleteOne(fragmentColl, {
-          Fragment.ID: ObjectId.parse(id),
-          USER_ID: userId,
+        await _mongoRepository.deleteOne(_collection!, {
+          BaseModel.fId: ObjectId.parse(id),
+          BaseModel.fUserId: userId,
         });
       }
     }
   }
 
   Future<void> _updateLocalHive() async {
-    final LocalSyncHive fragmentsLocal =
-        _localSyncHiveRepository.findByObject(fragmentColl);
-    fragmentsLocal.added = [];
-    fragmentsLocal.updated = [];
-    fragmentsLocal.deleted = [];
-    fragmentsLocal.save();
+    final LocalSyncHive objecttsLocal =
+        _localSyncHiveRepository.findByObject(_collection!);
+    objecttsLocal.added = [];
+    objecttsLocal.updated = [];
+    objecttsLocal.deleted = [];
+    objecttsLocal.save();
   }
 
   Future<void> _downloadAddedItems(String userId, List<String> added) async {
@@ -299,32 +306,23 @@ class SyncService {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in added) {
         orCondition.add({
-          Fragment.ID: ObjectId.parse(id),
-          USER_ID: userId,
+          BaseModel.fId: ObjectId.parse(id),
+          BaseModel.fUserId: userId,
         });
       }
 
       // Get added data from cloud
-      List<Map<String, dynamic>> addedFragments =
-          await _mongoRepository.find(fragmentColl, {
+      List<Map<String, dynamic>> addedObjects =
+          await _mongoRepository.find(_collection!, {
         '\$or': orCondition,
       });
 
-      List<FragmentHive> fragments = addedFragments.map((e) {
-        FragmentHive f = FragmentHive();
-        f.id = (e[Fragment.ID] as ObjectId).$oid;
-        f.categoryId = e[Fragment.CATEGORY_ID];
-        f.title = e[Fragment.TITLE];
-        f.description = e[Fragment.DESCRIPTION];
-        f.note = e[Fragment.NOTE] ?? '';
-        f.linkedItems = e[Fragment.LINKED_ITEMS] != null
-            ? List.from(e[Fragment.LINKED_ITEMS])
-            : [];
-        f.date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
-            .parse(e[Fragment.DATE]);
+      List objects = addedObjects.map((e) {
+        BaseModel f = _syncHiveRepository.creator();
+        f.fromMap(f, e);
         return f;
       }).toList();
-      await _fragmentHiveRepository.addAll(fragments);
+      await _syncHiveRepository.addAll(objects);
     }
   }
 
@@ -334,56 +332,44 @@ class SyncService {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in updated) {
         orCondition.add({
-          Fragment.ID: ObjectId.parse(id),
-          USER_ID: userId,
+          BaseModel.fId: ObjectId.parse(id),
+          BaseModel.fUserId: userId,
         });
       }
       // Get added data from cloud
-      List<Map<String, dynamic>> updatedFragments =
-          await _mongoRepository.find(fragmentColl, {
+      List<Map<String, dynamic>> updatedObjects =
+          await _mongoRepository.find(_collection!, {
         '\$or': orCondition,
       });
 
-      final List<FragmentHive> fragments =
-          _fragmentHiveRepository.findAllByKeys(updated);
-
-      for (var updatedFragment in updatedFragments) {
-        String hexStringId = (updatedFragment[Fragment.ID] as ObjectId).$oid;
-        FragmentHive f = fragments
-            .firstWhere((currFragment) => currFragment.id == hexStringId);
-        f.id = hexStringId;
-        f.categoryId = updatedFragment[Fragment.CATEGORY_ID];
-        f.title = updatedFragment[Fragment.TITLE];
-        f.note = updatedFragment[Fragment.NOTE];
-        f.linkedItems = updatedFragment[Fragment.LINKED_ITEMS] != null
-            ? List.from(updatedFragment[Fragment.LINKED_ITEMS])
-            : [];
-        f.date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
-            .parse(updatedFragment[Fragment.DATE]);
-        f.save();
+      for (var updatedObt in updatedObjects) {
+        String hexStringId = (updatedObt[BaseModel.fId] as ObjectId).$oid;
+        BaseModel? f = _syncHiveRepository.findByKey(hexStringId);
+        f!.fromMap(f, updatedObt);
+        _syncHiveRepository.save(f);
       }
     }
   }
 
   Future<void> _downloadDeletedItems(List<String> deleted) async {
     if (deleted.isNotEmpty) {
-      await _fragmentHiveRepository.deleteAll(deleted);
+      await _syncHiveRepository.deleteAll(deleted);
     }
   }
 
   Future<void> _removeFromCloudForThisDevice(
       String userId, String deviceId) async {
     await _mongoRepository.replaceOne(
-      deviceSyncColl,
+      LocalSync.collection,
       {
-        USER_ID: userId,
-        LocalSync.DEVICE: deviceId,
-        LocalSync.OBJECT: 'fragments',
+        BaseModel.fUserId: userId,
+        LocalSync.fDevice: deviceId,
+        LocalSync.fObject: _collection,
       },
       {
-        LocalSync.ADDED: [],
-        LocalSync.UPDATED: [],
-        LocalSync.DELETED: [],
+        LocalSync.fAdded: [],
+        LocalSync.fUpdated: [],
+        LocalSync.fDeleted: [],
       },
     );
   }

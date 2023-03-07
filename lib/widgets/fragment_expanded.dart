@@ -14,7 +14,7 @@ class ExpandedFragmentWidget extends StatelessWidget {
   Future<List<FragmentHive>> _fetchLinkedFragments() async {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
-    await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
 
     List<FragmentHive> results =
         fragmentHiveRepository.findAllByKeys(fragmentIds);

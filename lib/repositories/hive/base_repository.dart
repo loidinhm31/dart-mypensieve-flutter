@@ -1,7 +1,8 @@
 import 'package:hive/hive.dart';
+import 'package:my_pensieve/repositories/hive/sync_repository.dart';
 
-class BaseHiveRepository<T> {
-  late Box<T> box;
+abstract class BaseHiveRepository<T> implements SyncHiveRepository<T> {
+  Box<T>? box;
 
   static Future<void> init(String boxName) async {
     bool exists = await Hive.boxExists(boxName);
@@ -16,18 +17,20 @@ class BaseHiveRepository<T> {
     }
   }
 
+  String get boxName;
+
   Future<void> open(String boxName) async {
     await Hive.openBox<T>(boxName);
     box = Hive.box<T>(boxName);
   }
 
   Future<void> clear() async {
-    await box.clear();
+    await box!.clear();
   }
 
   Future<void> close() async {
-    if (box.isOpen) {
-      await box.close();
+    if (box != null && box!.isOpen) {
+      await box!.close();
     }
   }
 }

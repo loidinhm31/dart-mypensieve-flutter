@@ -7,6 +7,7 @@ import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/repositories/hive/base_repository.dart';
+import 'package:my_pensieve/repositories/hive/category_repository.dart';
 import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
@@ -33,8 +34,9 @@ Future<void> main() async {
     ..registerAdapter(FragmentHiveAdapter())
     ..registerAdapter(CategoryHiveAdapter());
 
-  await BaseHiveRepository.init(FragmentHiveRepository.boxName);
-  await BaseHiveRepository.init(LocalSyncHiveRepository.boxName);
+  await BaseHiveRepository.init(LocalSyncHiveRepository.boxInit);
+  await BaseHiveRepository.init(FragmentHiveRepository.boxInit);
+  await BaseHiveRepository.init(CategoryHiveRepository.boxInit);
 
   runApp(const MyApp());
 }

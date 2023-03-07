@@ -1,32 +1,45 @@
+import 'package:my_pensieve/models/category.dart';
+import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/category.dart';
 import 'package:my_pensieve/repositories/hive/category_repository.dart';
+import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 
 class CategoryService {
   static List<CategoryHive> items = [];
 
-  late CategoryHiveRepository categoryHiveRepository;
+  late final CategoryHiveRepository _categoryHiveRepository;
+  late final LocalSyncHiveRepository _localSyncHiveRepository;
 
   CategoryService() {
-    categoryHiveRepository = CategoryHiveRepository();
+    _categoryHiveRepository = CategoryHiveRepository();
+    _localSyncHiveRepository = LocalSyncHiveRepository();
   }
 
   Future<void> addOne(CategoryHive categoryHive) async {
+    await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
+    await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
+
     try {
-      await categoryHiveRepository.open(CategoryHiveRepository.boxName);
       String id =
-          await categoryHiveRepository.addOneWithCreatedId(categoryHive);
+          await _categoryHiveRepository.addOneWithCreatedId(categoryHive);
+      await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
+
+      await _localSyncHiveRepository.add(Category.collection, {
+        LocalSync.fAdded: [id],
+      });
     } finally {
-      await categoryHiveRepository.close();
+      await _categoryHiveRepository.close();
+      await _localSyncHiveRepository.close();
     }
   }
 
   Future<CategoryHive> getCategoryById(String id) async {
     CategoryHive categoryHive;
     try {
-      await categoryHiveRepository.open(CategoryHiveRepository.boxName);
-      categoryHive = categoryHiveRepository.findById(id);
+      await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
+      categoryHive = _categoryHiveRepository.findById(id);
     } finally {
-      await categoryHiveRepository.close();
+      await _categoryHiveRepository.close();
     }
     return categoryHive;
   }
@@ -34,10 +47,10 @@ class CategoryService {
   Future<List<CategoryHive>> getCategories() async {
     List<CategoryHive> categories;
     try {
-      await categoryHiveRepository.open(CategoryHiveRepository.boxName);
-      categories = categoryHiveRepository.findAll();
+      await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
+      categories = _categoryHiveRepository.findAll();
     } finally {
-      await categoryHiveRepository.close();
+      await _categoryHiveRepository.close();
     }
     return categories;
   }

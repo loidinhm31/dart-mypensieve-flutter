@@ -1,9 +1,11 @@
 class LocalSync {
-  static const String DEVICE = 'device';
-  static const String OBJECT = 'object';
-  static const String ADDED = 'added';
-  static const String UPDATED = 'updated';
-  static const String DELETED = 'deleted';
+  static const String collection = 'device_syncs'; // for cloud use
+
+  static const String fDevice = 'device';
+  static const String fObject = 'object';
+  static const String fAdded = 'added';
+  static const String fUpdated = 'updated';
+  static const String fDeleted = 'deleted';
 
   String? device;
   String? object;

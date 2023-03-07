@@ -1,8 +1,5 @@
 import 'package:mongo_dart/mongo_dart.dart';
 
-const String fragmentColl = 'fragments';
-const String deviceSyncColl = 'device_syncs';
-
 class MongoRepository {
   // Keeps the finalizer itself reachable, otherwise it might be disposed
   // before the finalizer callback gets a chance to run.

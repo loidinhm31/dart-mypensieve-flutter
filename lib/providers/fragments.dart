@@ -23,19 +23,25 @@ class Fragments with ChangeNotifier {
   Future<void> fetchAndSetFragments() async {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
-    await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
 
     final CategoryHiveRepository categoryHiveRepository =
         CategoryHiveRepository();
-    await categoryHiveRepository.open(CategoryHiveRepository.boxName);
+    await categoryHiveRepository.open(categoryHiveRepository.boxName);
 
     try {
       final categories = categoryHiveRepository.findAll();
 
       final fragments = fragmentHiveRepository.findAll(true);
       for (var f in fragments) {
-        CategoryHive c = categories.firstWhere((c1) => c1.id == f.categoryId);
-        f.categoryName = c.name;
+        CategoryHive currCategory;
+        try {
+          currCategory = categories.firstWhere((c1) => c1.id == f.categoryId,
+              orElse: () => throw Exception());
+          f.categoryName = currCategory.name;
+        } catch (_) {
+          f.categoryName = 'UNKNOW';
+        }
       }
 
       if (fragments.isNotEmpty) {
@@ -55,17 +61,17 @@ class Fragments with ChangeNotifier {
   Future<void> addFragment(FragmentHive fragment) async {
     final FragmentHiveRepository fragmentHiveRepository =
         FragmentHiveRepository();
-    await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
 
     final LocalSyncHiveRepository localSyncHiveRepository =
         LocalSyncHiveRepository();
-    await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
+    await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
 
     try {
       String id = await fragmentHiveRepository.addOneWithCreatedId(fragment);
 
       await localSyncHiveRepository.add('fragments', {
-        LocalSync.ADDED: [id],
+        LocalSync.fAdded: [id],
       });
     } catch (error) {
       rethrow;
@@ -84,11 +90,11 @@ class Fragments with ChangeNotifier {
     if (fragmentIndex >= 0) {
       final FragmentHiveRepository fragmentHiveRepository =
           FragmentHiveRepository();
-      await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+      await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
 
       final LocalSyncHiveRepository localSyncHiveRepository =
           LocalSyncHiveRepository();
-      await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
+      await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
 
       FragmentHive? fragmentHive =
           fragmentHiveRepository.findByKey(editFragment.id!);
@@ -103,7 +109,7 @@ class Fragments with ChangeNotifier {
           fragmentHive.save();
 
           await localSyncHiveRepository.add('fragments', {
-            LocalSync.UPDATED: [fragmentHive.id as String],
+            LocalSync.fUpdated: [fragmentHive.id as String],
           });
         } catch (error) {
           rethrow;
@@ -124,11 +130,11 @@ class Fragments with ChangeNotifier {
     if (fragmentIndex >= 0) {
       final FragmentHiveRepository fragmentHiveRepository =
           FragmentHiveRepository();
-      await fragmentHiveRepository.open(FragmentHiveRepository.boxName);
+      await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
 
       final LocalSyncHiveRepository localSyncHiveRepository =
           LocalSyncHiveRepository();
-      await localSyncHiveRepository.open(LocalSyncHiveRepository.boxName);
+      await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
 
       FragmentHive? fragmentHive = fragmentHiveRepository.findByKey(id);
       if (fragmentHive != null) {
@@ -136,7 +142,7 @@ class Fragments with ChangeNotifier {
           fragmentHive.delete();
 
           await localSyncHiveRepository.add('fragments', {
-            LocalSync.DELETED: [fragmentHive.id as String],
+            LocalSync.fDeleted: [fragmentHive.id as String],
           });
         } catch (error) {
           rethrow;

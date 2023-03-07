@@ -1,8 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 
-const String USER_ID = 'user_id';
-
 class User {
   static const String ID = '_id';
   static const String USERNAME = 'username';
