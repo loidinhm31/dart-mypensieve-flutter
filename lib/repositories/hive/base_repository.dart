@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:hive/hive.dart';
 import 'package:my_pensieve/repositories/hive/sync_repository.dart';
+import 'package:path_provider/path_provider.dart';
 
 abstract class BaseHiveRepository<T> implements SyncHiveRepository<T> {
   Box<T>? box;
 
   static Future<void> init(String boxName) async {
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+
     bool exists = await Hive.boxExists(boxName);
     if (exists) {
       // Create a box collection
@@ -12,7 +17,7 @@ abstract class BaseHiveRepository<T> implements SyncHiveRepository<T> {
         'pensieve', // Name of your database
         {boxName}, // Names of your boxes
         path:
-            './', // Path where to store your boxes (Only used in Flutter / Dart IO)
+            '${appDocumentDir.path}/pensieve', // Path where to store your boxes (Only used in Flutter / Dart IO)
       );
     }
   }
