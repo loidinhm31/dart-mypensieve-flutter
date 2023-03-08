@@ -1,5 +1,6 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/hive/category.dart';
 import 'package:my_pensieve/screens/category_edit_screent.dart';
 import 'package:my_pensieve/services/category_service.dart';
 
@@ -37,7 +38,14 @@ class _CategorySelectScreenWidgetState
           IconButton(
             onPressed: () {
               Navigator.of(context)
-                  .pushNamed(EditCategoryScreenWidget.routeName);
+                  .pushNamed(EditCategoryScreenWidget.routeName)
+                  .then((value) {
+                if (value == true) {
+                  setState(() {
+                    log('Refresh page');
+                  });
+                }
+              });
             },
             icon: const Icon(Icons.add),
           ),
