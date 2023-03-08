@@ -22,7 +22,7 @@ class DeviceUtil {
       } else {
         if (Platform.isAndroid) {
           var data = await deviceInfoPlugin.androidInfo;
-          deviceData = data.serialNumber;
+          deviceData = '${data.product}-${data.hardware}';
         } else if (Platform.isIOS) {
           var data = await deviceInfoPlugin.iosInfo;
           deviceData = data.identifierForVendor!;
