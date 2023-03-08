@@ -84,6 +84,9 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
             .then((value) {
           _currCategory = value;
           _categoryController.text = _currCategory.name!;
+        }).catchError((onError) {
+          _currCategory = CategoryHive();
+          _categoryController.text = 'UNKNOW';
         });
 
         // Init for linked items
@@ -437,6 +440,17 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                           flex: 5,
                           child: TextFormField(
                             controller: _linkFragmentsController,
+                            decoration: InputDecoration(
+                              labelText: 'Link Items',
+                              labelStyle: theme.textTheme.labelLarge,
+                              enabledBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              errorStyle: const TextStyle(
+                                color: Colors.transparent,
+                                fontSize: 0,
+                              ),
+                            ),
                             onTap: () => Navigator.of(context)
                                 .pushNamed(LinkFragmentsScreenWidget.routeName,
                                     arguments: widget.fragmentId)

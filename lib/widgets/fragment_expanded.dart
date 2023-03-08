@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/services/fragment_service.dart';
 import 'package:my_pensieve/widgets/fragment_link_view_item.dart';
 
 class ExpandedFragmentWidget extends StatelessWidget {
@@ -12,14 +12,12 @@ class ExpandedFragmentWidget extends StatelessWidget {
   final List<String?> fragmentIds;
 
   Future<List<FragmentHive>> _fetchLinkedFragments() async {
-    final FragmentHiveRepository fragmentHiveRepository =
-        FragmentHiveRepository();
-    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
+    final FragmentService fragmentService = FragmentService();
 
-    List<FragmentHive> results =
-        fragmentHiveRepository.findAllByKeys(fragmentIds);
+    List<FragmentHive> linkedFragments =
+        await fragmentService.getLinkedFragments(fragmentIds);
 
-    return results;
+    return linkedFragments;
   }
 
   @override

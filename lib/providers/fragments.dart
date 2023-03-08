@@ -1,14 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'package:my_pensieve/models/device_sync.dart';
-import 'package:my_pensieve/models/hive/category.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/repositories/hive/category_repository.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
-import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
+import 'package:my_pensieve/services/fragment_service.dart';
 
 class Fragments with ChangeNotifier {
-  final _fragmentsColl = 'fragments';
-
   List<FragmentHive> _items = [];
 
   List<FragmentHive> get items {
@@ -21,66 +15,24 @@ class Fragments with ChangeNotifier {
   }
 
   Future<void> fetchAndSetFragments() async {
-    final FragmentHiveRepository fragmentHiveRepository =
-        FragmentHiveRepository();
-    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
-
-    final CategoryHiveRepository categoryHiveRepository =
-        CategoryHiveRepository();
-    await categoryHiveRepository.open(categoryHiveRepository.boxName);
-
+    final FragmentService fragmentService = FragmentService();
     try {
-      final categories = categoryHiveRepository.findAll();
-
-      final fragments = fragmentHiveRepository.findAll(true);
-      for (var f in fragments) {
-        CategoryHive currCategory;
-        try {
-          currCategory = categories.firstWhere((c1) => c1.id == f.categoryId,
-              orElse: () => throw Exception());
-          f.categoryName = currCategory.name;
-        } catch (_) {
-          f.categoryName = 'UNKNOW';
-        }
-      }
-
-      if (fragments.isNotEmpty) {
-        _items = fragments;
-        notifyListeners();
-      } else {
-        _items = [];
-        notifyListeners();
-      }
+      _items = await fragmentService.getFragments();
+      notifyListeners();
     } catch (error) {
       rethrow;
-    } finally {
-      await fragmentHiveRepository.close();
     }
   }
 
   Future<void> addFragment(FragmentHive fragment) async {
-    final FragmentHiveRepository fragmentHiveRepository =
-        FragmentHiveRepository();
-    await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
-
-    final LocalSyncHiveRepository localSyncHiveRepository =
-        LocalSyncHiveRepository();
-    await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
+    final FragmentService fragmentService = FragmentService();
 
     try {
-      String id = await fragmentHiveRepository.addOneWithCreatedId(fragment);
-
-      await localSyncHiveRepository.add('fragments', {
-        LocalSync.fAdded: [id],
-      });
-    } catch (error) {
-      rethrow;
-    } finally {
+      await fragmentService.addFragment(fragment);
       _items.add(fragment);
       notifyListeners();
-
-      await fragmentHiveRepository.close();
-      await localSyncHiveRepository.close();
+    } catch (error) {
+      rethrow;
     }
   }
 
@@ -88,38 +40,14 @@ class Fragments with ChangeNotifier {
     final fragmentIndex = _items.indexWhere((el) => el.id == editFragment.id);
 
     if (fragmentIndex >= 0) {
-      final FragmentHiveRepository fragmentHiveRepository =
-          FragmentHiveRepository();
-      await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
+      final FragmentService fragmentService = FragmentService();
+      try {
+        await fragmentService.updateFragment(editFragment);
 
-      final LocalSyncHiveRepository localSyncHiveRepository =
-          LocalSyncHiveRepository();
-      await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
-
-      FragmentHive? fragmentHive =
-          fragmentHiveRepository.findByKey(editFragment.id!);
-      if (fragmentHive != null) {
-        try {
-          fragmentHive.categoryId = editFragment.categoryId;
-          fragmentHive.title = editFragment.title;
-          fragmentHive.description = editFragment.description;
-          fragmentHive.note = editFragment.note;
-          fragmentHive.linkedItems = editFragment.linkedItems;
-          fragmentHive.date = editFragment.date!.toUtc();
-          fragmentHive.save();
-
-          await localSyncHiveRepository.add('fragments', {
-            LocalSync.fUpdated: [fragmentHive.id as String],
-          });
-        } catch (error) {
-          rethrow;
-        } finally {
-          _items[fragmentIndex] = editFragment;
-          notifyListeners();
-
-          await fragmentHiveRepository.close();
-          await localSyncHiveRepository.close();
-        }
+        _items[fragmentIndex] = editFragment;
+        notifyListeners();
+      } catch (error) {
+        rethrow;
       }
     }
   }
@@ -128,31 +56,14 @@ class Fragments with ChangeNotifier {
     final fragmentIndex = _items.indexWhere((el) => el.id == id);
 
     if (fragmentIndex >= 0) {
-      final FragmentHiveRepository fragmentHiveRepository =
-          FragmentHiveRepository();
-      await fragmentHiveRepository.open(fragmentHiveRepository.boxName);
+      final FragmentService fragmentService = FragmentService();
 
-      final LocalSyncHiveRepository localSyncHiveRepository =
-          LocalSyncHiveRepository();
-      await localSyncHiveRepository.open(localSyncHiveRepository.boxName);
-
-      FragmentHive? fragmentHive = fragmentHiveRepository.findByKey(id);
-      if (fragmentHive != null) {
-        try {
-          fragmentHive.delete();
-
-          await localSyncHiveRepository.add('fragments', {
-            LocalSync.fDeleted: [fragmentHive.id as String],
-          });
-        } catch (error) {
-          rethrow;
-        } finally {
-          _items.removeAt(fragmentIndex);
-          notifyListeners();
-
-          await fragmentHiveRepository.close();
-          await localSyncHiveRepository.close();
-        }
+      try {
+        fragmentService.removeItem(id);
+        _items.removeAt(fragmentIndex);
+        notifyListeners();
+      } catch (error) {
+        rethrow;
       }
     }
   }

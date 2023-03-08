@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/models/hive/fragment.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 
@@ -38,7 +37,7 @@ class FragmentItemWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(6),
             child: FittedBox(
-              child: Text(fragment.categoryName!,
+              child: Text(fragment.categoryName ?? '',
                   style: theme.textTheme.labelLarge),
             ),
           ),
