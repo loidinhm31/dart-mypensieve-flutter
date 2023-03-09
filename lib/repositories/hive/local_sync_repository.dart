@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/repositories/hive/base_repository.dart';
@@ -48,7 +50,7 @@ class LocalSyncHiveRepository extends BaseHiveRepository<LocalSyncHive> {
     hiveObject.save();
   }
 
-  Future<void> add(String object, Map<String, dynamic> syncData) async {
+  Future<void> addData(String object, Map<String, dynamic> syncData) async {
     try {
       LocalSyncHive localSyncHive = box!.values
           .firstWhere((element) => element.object == object, orElse: () {

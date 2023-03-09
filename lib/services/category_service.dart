@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/category.dart';
@@ -5,8 +7,6 @@ import 'package:my_pensieve/repositories/hive/category_repository.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 
 class CategoryService {
-  static List<CategoryHive> items = [];
-
   late final CategoryHiveRepository _categoryHiveRepository;
   late final LocalSyncHiveRepository _localSyncHiveRepository;
 
@@ -24,9 +24,13 @@ class CategoryService {
           await _categoryHiveRepository.addOneWithCreatedId(categoryHive);
       await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
 
-      await _localSyncHiveRepository.add(Category.collection, {
+      await _localSyncHiveRepository.addData(Category.collection, {
         LocalSync.fAdded: [id],
       });
+    } catch (error, stack) {
+      log('Error: $error');
+      log('StackTrace: $stack');
+      rethrow;
     } finally {
       await _categoryHiveRepository.close();
       await _localSyncHiveRepository.close();
@@ -38,6 +42,10 @@ class CategoryService {
     try {
       await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
       categoryHive = _categoryHiveRepository.findById(id);
+    } catch (error, stack) {
+      log('Error: $error');
+      log('StackTrace: $stack');
+      rethrow;
     } finally {
       await _categoryHiveRepository.close();
     }
@@ -49,6 +57,10 @@ class CategoryService {
     try {
       await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
       categories = _categoryHiveRepository.findAll();
+    } catch (error, stack) {
+      log('Error: $error');
+      log('StackTrace: $stack');
+      rethrow;
     } finally {
       await _categoryHiveRepository.close();
     }

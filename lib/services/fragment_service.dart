@@ -85,7 +85,7 @@ class FragmentService {
       String id =
           await _fragmentHiveRepository.addOneWithCreatedId(fragmentHive);
 
-      await _localSyncHiveRepository.add(_fragmentHiveRepository.boxName, {
+      await _localSyncHiveRepository.addData(_fragmentHiveRepository.boxName, {
         LocalSync.fAdded: [id],
       });
     } catch (error, stack) {
@@ -114,7 +114,8 @@ class FragmentService {
         fragmentHive.date = editFragment.date!.toUtc();
         fragmentHive.save();
 
-        await _localSyncHiveRepository.add(_fragmentHiveRepository.boxName, {
+        await _localSyncHiveRepository
+            .addData(_fragmentHiveRepository.boxName, {
           LocalSync.fUpdated: [fragmentHive.id as String],
         });
       } catch (error, stack) {
@@ -137,7 +138,8 @@ class FragmentService {
       try {
         fragmentHive.delete();
 
-        await _localSyncHiveRepository.add(_fragmentHiveRepository.boxName, {
+        await _localSyncHiveRepository
+            .addData(_fragmentHiveRepository.boxName, {
           LocalSync.fDeleted: [fragmentHive.id as String],
         });
       } catch (error, stack) {

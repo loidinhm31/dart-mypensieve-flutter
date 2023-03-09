@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_pensieve/screens/account_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 import 'package:my_pensieve/screens/fragments_screen.dart';
+import 'package:my_pensieve/screens/sync_manual_screen.dart';
 
 class TabScreenWidget extends StatefulWidget {
   const TabScreenWidget({super.key});
@@ -30,6 +31,7 @@ class _TabScreenWidgetState extends State<TabScreenWidget>
     _pages = [
       const FragmentListScreenWidget(),
       EditFragmentScreenWidget(),
+      const ManualSyncScreenWidget(),
       const AccountScreenWidget(),
     ];
   }
@@ -59,7 +61,7 @@ class _TabScreenWidgetState extends State<TabScreenWidget>
     final mediaQuery = MediaQuery.of(context);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       initialIndex: 0,
       child: Scaffold(
         // Preserve the state of pages
@@ -94,6 +96,10 @@ class _TabScreenWidgetState extends State<TabScreenWidget>
                     ),
                   ),
                   label: ''),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.sync),
+                label: 'Manual Sync',
+              ),
               const BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: 'Setting',
