@@ -62,6 +62,7 @@ class SyncService<T extends BaseHiveRepository?> {
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
+        rethrow;
       } finally {
         await _localSyncHiveRepository.close();
       }
@@ -112,6 +113,7 @@ class SyncService<T extends BaseHiveRepository?> {
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
+        rethrow;
       } finally {
         await _mongoRepository.close();
       }
@@ -126,9 +128,9 @@ class SyncService<T extends BaseHiveRepository?> {
       final String deviceId = await DeviceUtil.deviceId;
 
       for (var coll in objectCollections) {
-        await initCloud(userId, deviceId, coll);
+        await _initCloud(userId, deviceId, coll);
 
-        await initLocal(coll);
+        await _initLocal(coll);
       }
     } catch (error, stack) {
       log('Error: $error');
@@ -139,7 +141,7 @@ class SyncService<T extends BaseHiveRepository?> {
     }
   }
 
-  Future<void> initCloud(
+  Future<void> _initCloud(
       String userId, String deviceId, String collection) async {
     List<Map<String, dynamic>> currentDeviceWithObjectCloudSync =
         await _mongoRepository.find(LocalSync.collection, {
@@ -178,8 +180,8 @@ class SyncService<T extends BaseHiveRepository?> {
     }
   }
 
-  Future<void> initLocal(String coll) async {
-    await _localSyncHiveRepository.add(coll, {
+  Future<void> _initLocal(String coll) async {
+    await _localSyncHiveRepository.addData(coll, {
       LocalSync.fAdded: <String>[],
       LocalSync.fUpdated: <String>[],
       LocalSync.fDeleted: <String>[],
