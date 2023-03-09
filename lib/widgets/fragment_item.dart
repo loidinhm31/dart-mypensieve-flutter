@@ -25,7 +25,14 @@ class FragmentItemWidget extends StatelessWidget {
       onTap: () => _selectFragment(context),
       splashColor: theme.colorScheme.secondary,
       child: ListTile(
+        contentPadding: const EdgeInsets.all(5.0),
         tileColor: theme.colorScheme.tertiary,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            color: theme.colorScheme.background,
+            width: 0.5,
+          ),
+        ),
         leading: Container(
           height: mediaQuery.size.height * 0.065,
           width: mediaQuery.size.width * 0.3,
@@ -42,9 +49,16 @@ class FragmentItemWidget extends StatelessWidget {
             ),
           ),
         ),
-        title: Text(
-          fragment.title!,
-          style: theme.textTheme.titleLarge,
+        title: Container(
+          alignment: Alignment.topLeft,
+          child: Chip(
+            backgroundColor: theme.colorScheme.secondary,
+            padding: const EdgeInsets.all(5.0),
+            label: Text(
+              fragment.title!,
+              style: theme.textTheme.titleLarge,
+            ),
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +70,7 @@ class FragmentItemWidget extends StatelessWidget {
             Center(
               child: Text(
                 fragment.description!,
-                style: theme.textTheme.displayLarge,
+                style: theme.textTheme.displaySmall,
               ),
             ),
           ],

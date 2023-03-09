@@ -26,7 +26,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
           SizedBox(
             width: mediaQuery.size.width * 0.1,
           ),
-          text,
+          Expanded(child: text),
         ],
       ),
     );
@@ -62,16 +62,31 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 ),
               ),
             ),
-            _buildFragmentItem(
-              theme,
-              mediaQuery,
-              const Icon(
-                Icons.title,
-                color: Colors.white,
-              ),
-              Text(
-                widget.fragment.title!,
-                style: theme.textTheme.displayLarge,
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 25, 10, 10),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.title,
+                    color: Colors.white,
+                  ),
+                  SizedBox(
+                    width: mediaQuery.size.width * 0.1,
+                  ),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.topLeft,
+                      child: Chip(
+                        backgroundColor: theme.colorScheme.secondary,
+                        padding: const EdgeInsets.all(5.0),
+                        label: Text(
+                          widget.fragment.title!,
+                          style: theme.textTheme.displayLarge,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             _buildFragmentItem(

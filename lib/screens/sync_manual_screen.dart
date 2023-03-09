@@ -115,151 +115,216 @@ class _ManualSyncScreenWidgetState extends State<ManualSyncScreenWidget> {
       ),
       body: Container(
         padding: const EdgeInsets.all(10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            DropdownButton<String>(
-              value: _dropdownValue,
-              elevation: 16,
-              items:
-                  _dropdownList.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? value) async {
-                _localSyncHive =
-                    await _localSyncService.getData(value!.toLowerCase());
-                setState(() {
-                  _dropdownValue = value;
-                });
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.background,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DropdownButton<String>(
+                value: _dropdownValue,
+                elevation: 16,
+                items:
+                    _dropdownList.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? value) async {
+                  _localSyncHive =
+                      await _localSyncService.getData(value!.toLowerCase());
+                  setState(() {
+                    _dropdownValue = value;
+                  });
+                },
+              ),
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Chip(
+                            backgroundColor: theme.colorScheme.secondary,
+                            padding: const EdgeInsets.all(5.0),
+                            label: Text(
+                              'Added',
+                              style: theme.textTheme.displayLarge,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.all(5.0),
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: theme.colorScheme.secondary,
+                                  width: 1.0,
+                                ),
+                              ),
+                              onPressed: () {
+                                _showMultiSelect(context, LocalSync.fAdded);
+                              },
+                              child: const Text('Select'),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        'Added',
-                        style: theme.textTheme.displayLarge,
-                      ),
-                      onPressed: () async {
-                        if (_localSyncHive != null) {
-                          _localSyncHive!.added = [];
-                          await _localSyncService.addData(_dropdownValue!,
-                              {LocalSync.fAdded: _localSyncHive!.added});
-                        }
-                      },
                     ),
-                    TextButton(
-                      onPressed: () {
-                        _showMultiSelect(context, LocalSync.fAdded);
-                      },
-                      child: const Text('Select'),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    _localSyncHive != null
-                        ? _localSyncHive!.added!.join(' - ').toString()
-                        : '',
-                    style: theme.textTheme.displayMedium,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.background,
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Wrap(
+                          children: _localSyncHive != null &&
+                                  _localSyncHive!.added != null
+                              ? _localSyncHive!.added!
+                                  .map((e) => Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Chip(
+                                          label: Text(e,
+                                              style: theme
+                                                  .textTheme.displayMedium),
+                                          backgroundColor:
+                                              theme.colorScheme.background,
+                                        ),
+                                      ))
+                                  .toList()
+                              : <Widget>[],
+                        ),
                       ),
-                      child: Text(
-                        'Updated',
-                        style: theme.textTheme.displayLarge,
-                      ),
-                      onPressed: () async {
-                        if (_localSyncHive != null) {
-                          _localSyncHive!.updated = [];
-                          await _localSyncService.addData(_dropdownValue!,
-                              {LocalSync.fUpdated: _localSyncHive!.updated});
-                        }
-                      },
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _showMultiSelect(context, LocalSync.fUpdated);
-                      },
-                      child: const Text('Select'),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    _localSyncHive != null
-                        ? _localSyncHive!.updated!.join(' - ').toString()
-                        : '',
-                    style: theme.textTheme.displayMedium,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.background,
+              ),
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Chip(
+                            backgroundColor: theme.colorScheme.secondary,
+                            padding: const EdgeInsets.all(5.0),
+                            label: Text(
+                              'Updated',
+                              style: theme.textTheme.displayLarge,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.all(5.0),
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: theme.colorScheme.secondary,
+                                  width: 1.0,
+                                ),
+                              ),
+                              onPressed: () {
+                                _showMultiSelect(context, LocalSync.fUpdated);
+                              },
+                              child: const Text('Select'),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        'Deleted',
-                        style: theme.textTheme.displayLarge,
-                      ),
-                      onPressed: () async {
-                        if (_localSyncHive != null) {
-                          _localSyncHive!.deleted = [];
-                          await _localSyncService.addData(_dropdownValue!,
-                              {LocalSync.fDeleted: _localSyncHive!.deleted});
-                        }
-                      },
                     ),
-                    TextButton(
-                      onPressed: () {
-                        _showMultiSelect(context, LocalSync.fDeleted);
-                      },
-                      child: const Text('Select'),
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Wrap(
+                          children: _localSyncHive != null &&
+                                  _localSyncHive!.updated != null
+                              ? _localSyncHive!.updated!
+                                  .map((e) => Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Chip(
+                                          label: Text(e,
+                                              style: theme
+                                                  .textTheme.displayMedium),
+                                          backgroundColor:
+                                              theme.colorScheme.background,
+                                        ),
+                                      ))
+                                  .toList()
+                              : <Widget>[],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    _localSyncHive != null
-                        ? _localSyncHive!.deleted!.join(' - ').toString()
-                        : '',
-                    style: theme.textTheme.displayMedium,
-                  ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Chip(
+                            backgroundColor: theme.colorScheme.secondary,
+                            padding: const EdgeInsets.all(5.0),
+                            label: Text(
+                              'Deleted',
+                              style: theme.textTheme.displayLarge,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.all(5.0),
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: theme.colorScheme.secondary,
+                                  width: 1.0,
+                                ),
+                              ),
+                              onPressed: () {
+                                _showMultiSelect(context, LocalSync.fDeleted);
+                              },
+                              child: const Text('Select'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Wrap(
+                          children: _localSyncHive != null &&
+                                  _localSyncHive!.deleted != null
+                              ? _localSyncHive!.deleted!
+                                  .map((e) => Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Chip(
+                                          label: Text(e,
+                                              style: theme
+                                                  .textTheme.displayMedium),
+                                          backgroundColor:
+                                              theme.colorScheme.background,
+                                        ),
+                                      ))
+                                  .toList()
+                              : <Widget>[],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            )
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

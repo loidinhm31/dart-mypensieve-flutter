@@ -43,14 +43,10 @@ class ExpandedFragmentWidget extends StatelessWidget {
                       BorderSide(width: 2.0),
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      LinkFragmentViewItemWidget(
-                        theme: theme,
-                        mediaQuery: mediaQuery,
-                        fragment: snapshot.data![index],
-                      ),
-                    ],
+                  child: LinkFragmentViewItemWidget(
+                    theme: theme,
+                    mediaQuery: mediaQuery,
+                    fragment: snapshot.data![index],
                   ),
                 );
               },

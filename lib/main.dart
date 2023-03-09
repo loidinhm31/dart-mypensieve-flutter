@@ -100,6 +100,12 @@ class MyApp extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  titleSmall: const TextStyle(
+                    fontFamily: 'University-Oldstyle',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   labelLarge: const TextStyle(
                     fontFamily: 'University-Oldstyle',
                     fontSize: 20,
@@ -109,6 +115,12 @@ class MyApp extends StatelessWidget {
                   labelMedium: const TextStyle(
                     fontFamily: 'University-Oldstyle',
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: SecondPallete.kToDark,
+                  ),
+                  labelSmall: const TextStyle(
+                    fontFamily: 'University-Oldstyle',
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: SecondPallete.kToDark,
                   ),

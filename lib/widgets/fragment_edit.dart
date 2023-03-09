@@ -192,7 +192,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
           Provider.of<LinkedFragments>(context, listen: false)
               .clearSelectedLinkedItem();
 
-          Navigator.of(context).pushNamed(TabScreenWidget.routeName);
+          Navigator.of(context).pushReplacementNamed(TabScreenWidget.routeName);
         });
       } catch (error) {
         await showDialog(
@@ -234,6 +234,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                   color: Colors.white,
                 ),
                 TextFormField(
+                  readOnly: true,
                   controller: _categoryController,
                   decoration: InputDecoration(
                     labelText: 'Category',
@@ -372,49 +373,41 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     ),
                     Expanded(
                       flex: 5,
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              controller: _dateController,
-                              onTap: () {
-                                // Below line stops keyboard from appearing
-                                FocusScope.of(context)
-                                    .requestFocus(FocusNode());
-
-                                // Show datepicker
-                                _presentDatePicker(context);
-                              },
-                              onSaved: (_) {
-                                _editedFragment.date = _selectedDate;
-                              },
+                          TextFormField(
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
                             ),
+                            controller: _dateController,
+                            onTap: () {
+                              // Below line stops keyboard from appearing
+                              FocusScope.of(context).requestFocus(FocusNode());
+
+                              // Show datepicker
+                              _presentDatePicker(context);
+                            },
+                            onSaved: (_) {
+                              _editedFragment.date = _selectedDate;
+                            },
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              controller: _timeController,
-                              onTap: () {
-                                // Below line stops keyboard from appearing
-                                FocusScope.of(context)
-                                    .requestFocus(FocusNode());
-
-                                // Show datepicker
-                                _presentTimePicker(context);
-                              },
-                              onSaved: (_) {
-                                _editedFragment.date = _selectedDate;
-                              },
+                          TextFormField(
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
                             ),
+                            controller: _timeController,
+                            onTap: () {
+                              // Below line stops keyboard from appearing
+                              FocusScope.of(context).requestFocus(FocusNode());
+
+                              // Show datepicker
+                              _presentTimePicker(context);
+                            },
+                            onSaved: (_) {
+                              _editedFragment.date = _selectedDate;
+                            },
                           ),
                         ],
                       ),
@@ -423,62 +416,64 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                 ),
               ),
               Container(
-                  padding: const EdgeInsets.all(5.0),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        flex: 1,
-                        child: Icon(
-                          Icons.dataset_linked,
-                          color: Colors.white,
-                        ),
+                padding: const EdgeInsets.all(5.0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      flex: 1,
+                      child: Icon(
+                        Icons.dataset_linked,
+                        color: Colors.white,
                       ),
-                      SizedBox(
-                        width: mediaQuery.size.width * 0.1,
-                      ),
-                      Expanded(
-                          flex: 5,
-                          child: TextFormField(
-                            controller: _linkFragmentsController,
-                            decoration: InputDecoration(
-                              labelText: 'Link Items',
-                              labelStyle: theme.textTheme.labelLarge,
-                              enabledBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white),
-                              ),
-                              errorStyle: const TextStyle(
-                                color: Colors.transparent,
-                                fontSize: 0,
-                              ),
+                    ),
+                    SizedBox(
+                      width: mediaQuery.size.width * 0.1,
+                    ),
+                    Expanded(
+                        flex: 5,
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: _linkFragmentsController,
+                          decoration: InputDecoration(
+                            labelText: 'Link Items',
+                            labelStyle: theme.textTheme.labelLarge,
+                            enabledBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
                             ),
-                            onTap: () => Navigator.of(context)
-                                .pushNamed(LinkFragmentsScreenWidget.routeName,
-                                    arguments: widget.fragmentId)
-                                .then((value) {
-                              if (value == true) {
-                                setState(() {
-                                  _linkedIds = Provider.of<LinkedFragments>(
-                                          context,
-                                          listen: false)
-                                      .linkedItems
-                                      .map((e) => e.id)
-                                      .toList();
-                                  _linkFragmentsController.text =
-                                      _linkedIds.join(" - ");
-                                });
-                              }
-                            }),
-                            onSaved: (newValue) {
-                              _editedFragment.linkedItems =
-                                  Provider.of<LinkedFragments>(context,
-                                          listen: false)
-                                      .linkedItems
-                                      .map((e) => e.id)
-                                      .toList();
-                            },
-                          ))
-                    ],
-                  )),
+                            errorStyle: const TextStyle(
+                              color: Colors.transparent,
+                              fontSize: 0,
+                            ),
+                          ),
+                          onTap: () => Navigator.of(context)
+                              .pushNamed(LinkFragmentsScreenWidget.routeName,
+                                  arguments: widget.fragmentId)
+                              .then((value) {
+                            if (value == true) {
+                              setState(() {
+                                _linkedIds = Provider.of<LinkedFragments>(
+                                        context,
+                                        listen: false)
+                                    .linkedItems
+                                    .map((e) => e.id)
+                                    .toList();
+                                _linkFragmentsController.text =
+                                    _linkedIds.join(" - ");
+                              });
+                            }
+                          }),
+                          onSaved: (newValue) {
+                            _editedFragment.linkedItems =
+                                Provider.of<LinkedFragments>(context,
+                                        listen: false)
+                                    .linkedItems
+                                    .map((e) => e.id)
+                                    .toList();
+                          },
+                        ))
+                  ],
+                ),
+              ),
             ],
           ),
         ),

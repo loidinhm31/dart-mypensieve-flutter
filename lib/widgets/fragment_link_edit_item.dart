@@ -53,6 +53,7 @@ class _LinkFragmentEditItemWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       key: ValueKey(widget.fragment.id),
       child: CheckboxListTile(
@@ -60,6 +61,7 @@ class _LinkFragmentEditItemWidgetState
         title: Row(
           children: [
             Expanded(
+              flex: 1,
               child: Container(
                 height: widget.mediaQuery.size.height * 0.05,
                 width: widget.mediaQuery.size.width * 0.05,
@@ -78,71 +80,34 @@ class _LinkFragmentEditItemWidgetState
               ),
             ),
             Expanded(
-              child: Padding(
+              flex: 3,
+              child: Container(
+                alignment: Alignment.topLeft,
                 padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.title,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(
-                      width: 5.0,
-                    ),
-                    Text(
-                      widget.fragment.title!,
-                      style: widget.theme.textTheme.displayLarge,
-                    ),
-                  ],
+                child: Chip(
+                  backgroundColor: theme.colorScheme.secondary,
+                  padding: const EdgeInsets.all(5.0),
+                  label: Text(
+                    widget.fragment.title!,
+                    style: widget.theme.textTheme.displayLarge,
+                  ),
                 ),
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.date_range,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(
-                      width: 5.0,
-                    ),
-                    Text(
-                      DateFormat.yMMMd().format(widget.fragment.date!),
-                      style: widget.theme.textTheme.displayLarge,
-                    ),
-                  ],
-                ),
+              child: Text(
+                DateFormat.yMMMd().format(widget.fragment.date!),
+                style: widget.theme.textTheme.displaySmall,
               ),
             ),
           ],
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.description,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(
-                    width: 5.0,
-                  ),
-                  Text(
-                    widget.fragment.description!,
-                    style: widget.theme.textTheme.displayLarge,
-                  ),
-                ],
-              ),
-            ),
-          ],
+        subtitle: RichText(
+          text: TextSpan(
+            text: widget.fragment.description!,
+            style: widget.theme.textTheme.displaySmall,
+          ),
         ),
-        isThreeLine: true,
         value: _isSelected,
         onChanged: (bool? newValue) {
           _handleSelectCheckbox(newValue!);

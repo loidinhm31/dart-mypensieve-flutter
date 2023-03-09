@@ -24,93 +24,43 @@ class LinkFragmentViewItemWidget extends StatelessWidget {
               DetailFragmentScreenWidget.routeName,
               arguments: fragment.id);
         },
+        leading: Chip(
+          label:
+              Text(fragment.categoryName!, style: theme.textTheme.labelMedium),
+        ),
         tileColor: theme.colorScheme.tertiary,
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Expanded(
+              flex: 3,
               child: Container(
-                height: mediaQuery.size.height * 0.05,
-                width: mediaQuery.size.width * 0.05,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.background,
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Padding(
+                alignment: Alignment.topLeft,
+                padding: const EdgeInsets.all(5.0),
+                child: Chip(
+                  backgroundColor: theme.colorScheme.secondary,
                   padding: const EdgeInsets.all(5.0),
-                  child: FittedBox(
-                    child: Text(fragment.categoryName!,
-                        style: theme.textTheme.labelLarge),
+                  label: Text(
+                    fragment.title!,
+                    style: theme.textTheme.titleSmall,
                   ),
                 ),
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.title,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(
-                      width: 5.0,
-                    ),
-                    Text(
-                      fragment.title!,
-                      style: theme.textTheme.displayLarge,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.date_range,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(
-                      width: 5.0,
-                    ),
-                    Text(
-                      DateFormat.yMMMd().format(fragment.date!),
-                      style: theme.textTheme.displayLarge,
-                    ),
-                  ],
-                ),
+              child: Text(
+                DateFormat.yMMMd().format(fragment.date!),
+                style: theme.textTheme.displaySmall,
               ),
             ),
           ],
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.description,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(
-                    width: 5.0,
-                  ),
-                  Text(
-                    fragment.description!,
-                    style: theme.textTheme.displayLarge,
-                  ),
-                ],
-              ),
-            ),
-          ],
+        subtitle: RichText(
+          text: TextSpan(
+            text: fragment.description!,
+            style: theme.textTheme.displaySmall,
+          ),
         ),
-        isThreeLine: true,
       ),
     );
   }
