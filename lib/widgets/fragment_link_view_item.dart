@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 
 class LinkFragmentViewItemWidget extends StatelessWidget {
@@ -12,7 +12,7 @@ class LinkFragmentViewItemWidget extends StatelessWidget {
   });
   final ThemeData theme;
   final MediaQueryData mediaQuery;
-  final FragmentHive fragment;
+  final Fragment fragment;
 
   @override
   Widget build(BuildContext context) {

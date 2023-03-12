@@ -4,20 +4,20 @@ import 'package:mongo_dart/mongo_dart.dart';
 import 'package:my_pensieve/models/base.dart';
 import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/hive/local_sync.dart';
-import 'package:my_pensieve/repositories/hive/base_repository.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 import 'package:my_pensieve/repositories/mongo_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/sync_repository.dart';
 import 'package:my_pensieve/utils/device_info.dart';
 
-class SyncService<T extends BaseHiveRepository?> {
-  late BaseHiveRepository _syncHiveRepository;
+class SyncService<T extends SyncRepository?> {
+  late SyncRepository _syncRepository;
   late LocalSyncHiveRepository _localSyncHiveRepository;
   late MongoRepository _mongoRepository;
   final String? _collection;
 
   SyncService([this._collection, T Function()? creator]) {
     if (creator != null) {
-      _syncHiveRepository = creator()!;
+      _syncRepository = creator()!;
     }
     _localSyncHiveRepository = LocalSyncHiveRepository();
     _mongoRepository = MongoRepository();
@@ -41,7 +41,7 @@ class SyncService<T extends BaseHiveRepository?> {
       // Notify cloud before upload (for non-current devices)
       await _notifyAnotherDevices(userId, added, updated, deleted, deviceId);
 
-      await _syncHiveRepository.open(_syncHiveRepository.boxName);
+      _syncRepository.init();
 
       // Upload
       await _uploadAddedItems(userId, added);
@@ -53,7 +53,6 @@ class SyncService<T extends BaseHiveRepository?> {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await _syncHiveRepository.close();
       await _mongoRepository.close();
 
       try {
@@ -77,7 +76,7 @@ class SyncService<T extends BaseHiveRepository?> {
 
       List<Map<String, dynamic>> unsyncObjects =
           await _mongoRepository.find(LocalSync.collection, {
-        BaseModel.fUserId: userId,
+        BaseClass.fUserId: userId,
         LocalSync.fDevice: deviceId,
         LocalSync.fObject: _collection,
       });
@@ -93,7 +92,7 @@ class SyncService<T extends BaseHiveRepository?> {
             ? List<String>.from(unsyncObjects[0][LocalSync.fDeleted]).toList()
             : [];
 
-        await _syncHiveRepository.open(_syncHiveRepository.boxName);
+        _syncRepository.init();
 
         await _downloadAddedItems(userId, added);
 
@@ -105,8 +104,6 @@ class SyncService<T extends BaseHiveRepository?> {
       log('Error: $error');
       log('StackTrace: $stack');
     } finally {
-      await _syncHiveRepository.close();
-
       try {
         // Remove in cloud sync collection
         await _removeFromCloudForThisDevice(userId, deviceId);
@@ -145,7 +142,7 @@ class SyncService<T extends BaseHiveRepository?> {
       String userId, String deviceId, String collection) async {
     List<Map<String, dynamic>> currentDeviceWithObjectCloudSync =
         await _mongoRepository.find(LocalSync.collection, {
-      BaseModel.fUserId: userId,
+      BaseClass.fUserId: userId,
       LocalSync.fDevice: deviceId,
       LocalSync.fObject: collection,
     });
@@ -154,19 +151,19 @@ class SyncService<T extends BaseHiveRepository?> {
       // Find all items from cloud
       List<Map<String, dynamic>> cloudItems =
           await _mongoRepository.find(collection, {
-        BaseModel.fUserId: userId,
+        BaseClass.fUserId: userId,
       });
 
       List<String> ids = [];
       for (var element in cloudItems) {
-        ids.add((element[BaseModel.fId] as ObjectId).$oid);
+        ids.add((element[BaseClass.fId] as ObjectId).$oid);
       }
 
       // Add new device with object to cloud
       await _mongoRepository.insertOne(
         LocalSync.collection,
         {
-          BaseModel.fUserId: userId,
+          BaseClass.fUserId: userId,
           LocalSync.fDevice: deviceId,
           LocalSync.fObject: collection,
           LocalSync.fAdded: ids,
@@ -193,7 +190,7 @@ class SyncService<T extends BaseHiveRepository?> {
     Map<String, dynamic> nonCurrentDeviceCondition = {
       '\$and': [
         {
-          BaseModel.fUserId: userId,
+          BaseClass.fUserId: userId,
           LocalSync.fDevice: {
             '\$nin': [deviceId]
           },
@@ -256,28 +253,28 @@ class SyncService<T extends BaseHiveRepository?> {
 
   Future<void> _uploadAddedItems(String userId, List<String>? added) async {
     if (added != null && added.isNotEmpty) {
-      List objectHives = _syncHiveRepository.findAllByKeys(added);
+      List objects = await _syncRepository.syncFindAllByIds(added);
       // Insert
       List<Map<String, dynamic>> maps = [];
-      for (var element in objectHives) {
-        maps.add(element.toMap(userId));
+      for (var element in objects) {
+        maps.add((element as BaseClass).toMap(userId));
       }
-      // Excecute upload added data
+      // Execute upload added data
       await _mongoRepository.insertAll(_collection!, maps);
     }
   }
 
   Future<void> _uploadUpdatedItems(String userId, List<String>? updated) async {
     if (updated != null && updated.isNotEmpty) {
-      List objectHives = _syncHiveRepository.findAllByKeys(updated);
-      for (var element in objectHives) {
+      List objects = await _syncRepository.syncFindAllByIds(updated);
+      for (var element in objects) {
         await _mongoRepository.replaceOne(
           _collection!,
           {
-            BaseModel.fId: ObjectId.parse(element.$id!),
-            BaseModel.fUserId: userId,
+            BaseClass.fId: ObjectId.parse(element.$id!),
+            BaseClass.fUserId: userId,
           },
-          element.toMapUpdate(),
+            (element as BaseClass).toMapUpdate(),
         );
       }
     }
@@ -287,8 +284,8 @@ class SyncService<T extends BaseHiveRepository?> {
     if (deleted != null && deleted.isNotEmpty) {
       for (var id in deleted) {
         await _mongoRepository.deleteOne(_collection!, {
-          BaseModel.fId: ObjectId.parse(id),
-          BaseModel.fUserId: userId,
+          BaseClass.fId: ObjectId.parse(id),
+          BaseClass.fUserId: userId,
         });
       }
     }
@@ -308,8 +305,8 @@ class SyncService<T extends BaseHiveRepository?> {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in added) {
         orCondition.add({
-          BaseModel.fId: ObjectId.parse(id),
-          BaseModel.fUserId: userId,
+          BaseClass.fId: ObjectId.parse(id),
+          BaseClass.fUserId: userId,
         });
       }
 
@@ -320,11 +317,11 @@ class SyncService<T extends BaseHiveRepository?> {
       });
 
       List objects = addedObjects.map((e) {
-        BaseModel f = _syncHiveRepository.creator();
+        BaseClass f = _syncRepository.creator();
         f.fromMap(f, e);
         return f;
       }).toList();
-      await _syncHiveRepository.addAll(objects);
+      await _syncRepository.syncSaveAll(objects);
     }
   }
 
@@ -334,28 +331,29 @@ class SyncService<T extends BaseHiveRepository?> {
       List<Map<String, dynamic>> orCondition = [];
       for (var id in updated) {
         orCondition.add({
-          BaseModel.fId: ObjectId.parse(id),
-          BaseModel.fUserId: userId,
+          BaseClass.fId: ObjectId.parse(id),
+          BaseClass.fUserId: userId,
         });
       }
-      // Get added data from cloud
+      // Get updated data from cloud
       List<Map<String, dynamic>> updatedObjects =
           await _mongoRepository.find(_collection!, {
         '\$or': orCondition,
       });
 
-      for (var updatedObt in updatedObjects) {
-        String hexStringId = (updatedObt[BaseModel.fId] as ObjectId).$oid;
-        BaseModel? f = _syncHiveRepository.findByKey(hexStringId);
-        f!.fromMap(f, updatedObt);
-        _syncHiveRepository.save(f);
-      }
+      List<BaseClass> baseObjects = updatedObjects.map((updatedObject) {
+        BaseClass baseObject = _syncRepository.creator();
+        baseObject.fromMap(baseObject, updatedObject);
+        return baseObject;
+      }).toList();
+
+      await _syncRepository.syncUpdateAll(baseObjects);
     }
   }
 
   Future<void> _downloadDeletedItems(List<String> deleted) async {
     if (deleted.isNotEmpty) {
-      await _syncHiveRepository.deleteAll(deleted);
+      await _syncRepository.syncDeleteAll(deleted);
     }
   }
 
@@ -364,7 +362,7 @@ class SyncService<T extends BaseHiveRepository?> {
     await _mongoRepository.replaceOne(
       LocalSync.collection,
       {
-        BaseModel.fUserId: userId,
+        BaseClass.fUserId: userId,
         LocalSync.fDevice: deviceId,
         LocalSync.fObject: _collection,
       },

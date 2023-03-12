@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 import 'package:my_pensieve/widgets/fragment_detail.dart';
@@ -17,7 +17,7 @@ class DetailFragmentScreenWidget extends StatefulWidget {
 
 class _DetailFragmentScreenWidgetState
     extends State<DetailFragmentScreenWidget> {
-  late FragmentHive _loadedFragment;
+  late Fragment _loadedFragment;
 
   void _handleCancelButton(BuildContext context) {
     Navigator.of(context).pop();

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/services/fragment_service.dart';
 import 'package:my_pensieve/widgets/fragment_link_view_item.dart';
 
 class ExpandedFragmentWidget extends StatelessWidget {
   const ExpandedFragmentWidget({
     super.key,
-    required this.fragmentIds,
+    required this.fragmentId,
   });
 
-  final List<String?> fragmentIds;
+  final String fragmentId;
 
-  Future<List<FragmentHive>> _fetchLinkedFragments() async {
+  Future<List<Fragment>> _fetchLinkedFragments() async {
     final FragmentService fragmentService = FragmentService();
 
-    List<FragmentHive> linkedFragments =
-        await fragmentService.getLinkedFragments(fragmentIds);
+    List<Fragment> linkedFragments =
+        await fragmentService.getLinkedFragments(fragmentId);
 
     return linkedFragments;
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 
 class FragmentItemWidget extends StatelessWidget {
@@ -9,7 +9,7 @@ class FragmentItemWidget extends StatelessWidget {
     required this.fragment,
   }) : super(key: key);
 
-  final FragmentHive fragment;
+  final Fragment fragment;
 
   void _selectFragment(BuildContext context) {
     Navigator.of(context).pushNamed(DetailFragmentScreenWidget.routeName,

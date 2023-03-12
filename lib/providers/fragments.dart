@@ -1,15 +1,15 @@
 import 'package:flutter/widgets.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/services/fragment_service.dart';
 
 class Fragments with ChangeNotifier {
-  List<FragmentHive> _items = [];
+  List<Fragment> _items = [];
 
-  List<FragmentHive> get items {
+  List<Fragment> get items {
     return [..._items];
   }
 
-  FragmentHive findById(String id) {
+  Fragment findById(String id) {
     return _items.firstWhere((el) => el.id == id,
         orElse: () => throw Exception());
   }
@@ -24,19 +24,19 @@ class Fragments with ChangeNotifier {
     }
   }
 
-  Future<void> addFragment(FragmentHive fragment) async {
+  Future<void> addFragment(Fragment fragment) async {
     final FragmentService fragmentService = FragmentService();
 
     try {
       await fragmentService.addFragment(fragment);
-      _items.add(fragment);
-      notifyListeners();
     } catch (error) {
       rethrow;
     }
+    _items.add(fragment);
+    notifyListeners();
   }
 
-  Future<void> updateFragment(FragmentHive editFragment) async {
+  Future<void> updateFragment(Fragment editFragment) async {
     final fragmentIndex = _items.indexWhere((el) => el.id == editFragment.id);
 
     if (fragmentIndex >= 0) {

@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:my_pensieve/models/hive/category.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/daos/database.dart' as db;
 import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/repositories/hive/base_repository.dart';
-import 'package:my_pensieve/repositories/hive/category_repository.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
 import 'package:my_pensieve/screens/category_edit_screent.dart';
@@ -22,6 +19,7 @@ import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,13 +28,11 @@ Future<void> main() async {
 
   Hive
     ..init('${appDocumentDir.path}/pensieve')
-    ..registerAdapter(LocalSyncHiveAdapter())
-    ..registerAdapter(FragmentHiveAdapter())
-    ..registerAdapter(CategoryHiveAdapter());
+    ..registerAdapter(LocalSyncHiveAdapter());
 
   await BaseHiveRepository.init(LocalSyncHiveRepository.boxInit);
-  await BaseHiveRepository.init(FragmentHiveRepository.boxInit);
-  await BaseHiveRepository.init(CategoryHiveRepository.boxInit);
+
+  Get.put(db.AppDatabase());
 
   runApp(const MyApp());
 }

@@ -1,34 +1,37 @@
 import 'dart:developer';
 
+import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/models/device_sync.dart';
-import 'package:my_pensieve/models/hive/category.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
-import 'package:my_pensieve/repositories/hive/category_repository.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/category_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/fragment_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/linked_fragment_repository.dart';
 
 class FragmentService {
+  late final FragmentRepository _fragmentRepository;
   late final LocalSyncHiveRepository _localSyncHiveRepository;
-  late final FragmentHiveRepository _fragmentHiveRepository;
-  late final CategoryHiveRepository _categoryHiveRepository;
+  late final CategoryRepository _categoryRepository;
+  late final LinkedFragmentRepository _linkedFragmentRepository;
 
   FragmentService() {
+    _fragmentRepository = FragmentRepository();
+    _linkedFragmentRepository = LinkedFragmentRepository();
     _localSyncHiveRepository = LocalSyncHiveRepository();
-    _fragmentHiveRepository = FragmentHiveRepository();
-    _categoryHiveRepository = CategoryHiveRepository();
+    _categoryRepository = CategoryRepository();
   }
 
-  Future<List<FragmentHive>> getFragments() async {
-    await _fragmentHiveRepository.open(_fragmentHiveRepository.boxName);
-    await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
+  Future<List<Fragment>> getFragments() async {
+    _fragmentRepository.init();
+    _categoryRepository.init();
 
-    List<FragmentHive> fragments = [];
+    List<Fragment> fragments = [];
     try {
-      fragments = _fragmentHiveRepository.findAll(true);
-      final categories = _categoryHiveRepository.findAll();
+      fragments = await _fragmentRepository.findAll();
+      final List<Category> categories = await _categoryRepository.findAll();
 
       for (var f in fragments) {
-        CategoryHive currCategory;
+        Category currCategory;
         try {
           currCategory = categories.firstWhere((c1) => c1.id == f.categoryId,
               orElse: () => throw Exception());
@@ -41,51 +44,48 @@ class FragmentService {
       log('Error: $error');
       log('StackTrace: $stack');
       rethrow;
-    } finally {
-      await _fragmentHiveRepository.close();
-      await _categoryHiveRepository.close();
     }
     return fragments;
   }
 
-  Future<List<FragmentHive>> getLinkedFragments(List<String?> keys) async {
-    await _fragmentHiveRepository.open(_fragmentHiveRepository.boxName);
-    await _categoryHiveRepository.open(_categoryHiveRepository.boxName);
+  Future<List<Fragment>> getLinkedFragments(String id) async {
+    _fragmentRepository.init();
+    _linkedFragmentRepository.init();
+    _categoryRepository.init();
 
-    List<FragmentHive> linkedFragments = [];
+    List<Fragment> linkedFragments = [];
     try {
-      linkedFragments = _fragmentHiveRepository.findAllByKeys(keys);
-      final categories = _categoryHiveRepository.findAll();
-      for (var f in linkedFragments) {
-        CategoryHive currCategory;
+      final linkedIds =
+          await _linkedFragmentRepository.findLinkedFragmentsByFragmentId(id);
+      linkedFragments = await _fragmentRepository.findAllByIds(linkedIds);
+
+      final List<Category> categories = await _categoryRepository.findAll();
+      for (var lf in linkedFragments) {
+        Category currCategory;
         try {
-          currCategory = categories.firstWhere((c1) => c1.id == f.categoryId,
+          currCategory = categories.firstWhere((c1) => c1.id == lf.categoryId,
               orElse: () => throw Exception());
-          f.categoryName = currCategory.name;
+          lf.categoryName = currCategory.name;
         } catch (_) {
-          f.categoryName = 'UNKNOW';
+          lf.categoryName = 'UNKNOW';
         }
       }
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');
       rethrow;
-    } finally {
-      await _fragmentHiveRepository.close();
-      await _categoryHiveRepository.close();
     }
     return linkedFragments;
   }
 
-  Future<void> addFragment(FragmentHive fragmentHive) async {
-    await _fragmentHiveRepository.open(_fragmentHiveRepository.boxName);
+  Future<void> addFragment(Fragment fragment) async {
+    _fragmentRepository.init();
     await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
 
     try {
-      String id =
-          await _fragmentHiveRepository.addOneWithCreatedId(fragmentHive);
+      String id = await _fragmentRepository.save(fragment);
 
-      await _localSyncHiveRepository.addData(_fragmentHiveRepository.boxName, {
+      await _localSyncHiveRepository.addData(_fragmentRepository.table, {
         LocalSync.fAdded: [id],
       });
     } catch (error, stack) {
@@ -93,61 +93,56 @@ class FragmentService {
       log('StackTrace: $stack');
       rethrow;
     } finally {
-      await _fragmentHiveRepository.close();
       await _localSyncHiveRepository.close();
     }
   }
 
-  Future<void> updateFragment(FragmentHive editFragment) async {
-    await _fragmentHiveRepository.open(_fragmentHiveRepository.boxName);
+  Future<void> updateFragment(Fragment editFragment) async {
+    _fragmentRepository.init();
     await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
 
-    FragmentHive? fragmentHive =
-        _fragmentHiveRepository.findByKey(editFragment.id!);
-    if (fragmentHive != null) {
+    Fragment? fragment = await _fragmentRepository.findById(editFragment.id!);
+    if (fragment != null) {
       try {
-        fragmentHive.categoryId = editFragment.categoryId;
-        fragmentHive.title = editFragment.title;
-        fragmentHive.description = editFragment.description;
-        fragmentHive.note = editFragment.note;
-        fragmentHive.linkedItems = editFragment.linkedItems;
-        fragmentHive.date = editFragment.date!.toUtc();
-        fragmentHive.save();
+        fragment.categoryId = editFragment.categoryId;
+        fragment.title = editFragment.title;
+        fragment.description = editFragment.description;
+        fragment.note = editFragment.note;
+        fragment.linkedItems = editFragment.linkedItems;
+        fragment.date = editFragment.date!;
 
-        await _localSyncHiveRepository
-            .addData(_fragmentHiveRepository.boxName, {
-          LocalSync.fUpdated: [fragmentHive.id as String],
+        await _fragmentRepository.update(fragment);
+
+        await _localSyncHiveRepository.addData(_fragmentRepository.table, {
+          LocalSync.fUpdated: [fragment.id as String],
         });
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
         rethrow;
       } finally {
-        await _fragmentHiveRepository.close();
         await _localSyncHiveRepository.close();
       }
     }
   }
 
   Future<void> removeItem(String id) async {
-    await _fragmentHiveRepository.open(_fragmentHiveRepository.boxName);
+    _fragmentRepository.init();
     await _localSyncHiveRepository.open(_localSyncHiveRepository.boxName);
 
-    FragmentHive? fragmentHive = _fragmentHiveRepository.findByKey(id);
-    if (fragmentHive != null) {
+    Fragment? fragment = await _fragmentRepository.findById(id);
+    if (fragment != null) {
       try {
-        fragmentHive.delete();
+        await _fragmentRepository.delete(fragment.id!);
 
-        await _localSyncHiveRepository
-            .addData(_fragmentHiveRepository.boxName, {
-          LocalSync.fDeleted: [fragmentHive.id as String],
+        await _localSyncHiveRepository.addData(_fragmentRepository.table, {
+          LocalSync.fDeleted: [fragment.id as String],
         });
       } catch (error, stack) {
         log('Error: $error');
         log('StackTrace: $stack');
         rethrow;
       } finally {
-        await _fragmentHiveRepository.close();
         await _localSyncHiveRepository.close();
       }
     }

@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
-import 'package:my_pensieve/models/hive/category.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/category.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
 import 'package:my_pensieve/screens/category_select_screen.dart';
@@ -32,8 +32,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _fragmentForm = GlobalKey<FormState>();
   late CategoryService _categoryService;
 
-  late FragmentHive _editedFragment;
-  late CategoryHive _currCategory;
+  late Fragment _editedFragment;
+  late Category _currCategory;
   bool _isInit = true;
 
   final _categoryController = TextEditingController();
@@ -41,7 +41,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _timeController = TextEditingController();
   final _linkFragmentsController = TextEditingController();
 
-  List<String?> _linkedIds = [];
+  List<String> _linkedIds = [];
 
   late DateTime _selectedDate;
 
@@ -64,19 +64,11 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         _selectedDate = _editedFragment.date!;
 
         // Add selected linked fragments into list to keep checked state state
-        final fragments = Provider.of<Fragments>(context, listen: false).items;
-        for (String? id in _editedFragment.linkedItems!) {
-          try {
-            FragmentHive? f = fragments.firstWhere(
-                (element) => element.id == id,
-                orElse: () => throw Exception());
-
-            Provider.of<LinkedFragments>(context, listen: false)
-                .addLinkedItem(f);
-          } catch (error) {
-            log('Linked fragment was deleted');
-          }
-        }
+        Provider.of<LinkedFragments>(context, listen: false).getLinkedItems(_editedFragment.id!).then((value) {
+          // Init for linked items
+          _linkedIds = value.map((e) => e.id!).toList();
+          _linkFragmentsController.text = _linkedIds.join(" - ");
+        });
 
         // Init for category
         _categoryService
@@ -85,16 +77,12 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
           _currCategory = value;
           _categoryController.text = _currCategory.name!;
         }).catchError((onError) {
-          _currCategory = CategoryHive();
+          _currCategory = Category();
           _categoryController.text = 'UNKNOW';
         });
-
-        // Init for linked items
-        _linkedIds = _editedFragment.linkedItems!;
-        _linkFragmentsController.text = _linkedIds.join(" - ");
       } else {
-        _editedFragment = FragmentHive();
-        _currCategory = CategoryHive();
+        _editedFragment = Fragment();
+        _currCategory = Category();
 
         _selectedDate = DateTime.now();
         _editedFragment.date = _selectedDate;
@@ -402,7 +390,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                               // Below line stops keyboard from appearing
                               FocusScope.of(context).requestFocus(FocusNode());
 
-                              // Show datepicker
+                              // Show date picker
                               _presentTimePicker(context);
                             },
                             onSaved: (_) {
@@ -455,7 +443,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                                         context,
                                         listen: false)
                                     .linkedItems
-                                    .map((e) => e.id)
+                                    .map((e) => e.id!)
                                     .toList();
                                 _linkFragmentsController.text =
                                     _linkedIds.join(" - ");
@@ -467,7 +455,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                                 Provider.of<LinkedFragments>(context,
                                         listen: false)
                                     .linkedItems
-                                    .map((e) => e.id)
+                                    .map((e) => e.id!)
                                     .toList();
                           },
                         ))

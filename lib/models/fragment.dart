@@ -1,8 +1,9 @@
 import 'package:intl/intl.dart';
 import 'package:mongo_dart/mongo_dart.dart';
+import 'package:my_pensieve/daos/database.dart' as db;
 import 'package:my_pensieve/models/base.dart';
 
-class Fragment {
+class Fragment extends BaseClass {
   static const String collection = 'fragments';
 
   static const String fCategoryId = 'category_id';
@@ -14,23 +15,68 @@ class Fragment {
 
   String? id;
   String? categoryId;
+  String? categoryName;
   String? title;
   String? description;
   String? note;
-  List<String?>? linkedItems;
+  List<String>? linkedItems;
   DateTime? date;
 
   Fragment();
 
-  Fragment.fromMap(Map<String, Object?> map) {
-    id = (map[BaseModel.fId] as ObjectId).$oid;
-    categoryId = map[fCategoryId] as String?;
-    title = map[fTitle] as String?;
-    description = map[fDescription] as String?;
-    note = map[fNote] as String?;
-    linkedItems = List<String>.from(
-        map[fLinkedItems] != null ? map[fLinkedItems] as List<dynamic> : []);
-    date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
-        .parse(map[fDate] as String);
+  @override
+  String? get $id => id;
+
+  @override
+  Map<String, dynamic> toMap(String userId) {
+    var map = {
+      BaseClass.fId: ObjectId.parse(id as String),
+      BaseClass.fUserId: userId,
+      Fragment.fCategoryId: categoryId,
+      Fragment.fTitle: title,
+      Fragment.fDescription: description,
+      Fragment.fNote: note,
+      Fragment.fLinkedItems: linkedItems,
+      Fragment.fDate: date!.toUtc().toIso8601String(),
+    };
+    return map;
+  }
+
+  @override
+  Map<String, dynamic> toMapUpdate() {
+    var map = {
+      Fragment.fCategoryId: categoryId,
+      Fragment.fTitle: title,
+      Fragment.fDescription: description,
+      Fragment.fNote: note,
+      Fragment.fLinkedItems: linkedItems,
+      Fragment.fDate: date!.toUtc().toIso8601String(),
+    };
+    return map;
+  }
+
+  @override
+  Fragment fromMap(BaseClass baseObject, Map<String, Object?> map) {
+    (baseObject as Fragment).id = (map[BaseClass.fId] as ObjectId).$oid;
+    baseObject.categoryId = map[Fragment.fCategoryId] as String?;
+    baseObject.title = map[Fragment.fTitle] as String?;
+    baseObject.description = map[Fragment.fDescription] as String?;
+    baseObject.note = map[Fragment.fNote] as String?;
+    baseObject.linkedItems = List<String>.from(
+        map[Fragment.fLinkedItems] != null
+            ? map[Fragment.fLinkedItems] as List<dynamic>
+            : []);
+    baseObject.date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'')
+        .parse(map[Fragment.fDate] as String);
+    return baseObject;
+  }
+
+  Fragment.fromDatabase(db.Fragment fragment) {
+    id = fragment.id;
+    categoryId = fragment.categoryId;
+    title = fragment.title;
+    description = fragment.description;
+    note = fragment.note;
+    date = fragment.date;
   }
 }

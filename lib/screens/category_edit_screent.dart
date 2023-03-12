@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_pensieve/models/hive/category.dart';
-import 'package:my_pensieve/screens/tabs_screen.dart';
+import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/services/category_service.dart';
 
 class EditCategoryScreenWidget extends StatefulWidget {
@@ -16,7 +15,7 @@ class EditCategoryScreenWidget extends StatefulWidget {
 class _EditCategoryScreenWidgetState extends State<EditCategoryScreenWidget> {
   final _categoryForm = GlobalKey<FormState>();
 
-  late CategoryHive _editedCategory;
+  late Category _editedCategory;
   bool _isInit = true;
 
   Future<void> _saveForm() async {
@@ -33,6 +32,7 @@ class _EditCategoryScreenWidgetState extends State<EditCategoryScreenWidget> {
       // TODO
     } else {
       await categoryService.addOne(_editedCategory);
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop(true);
     }
   }
@@ -42,7 +42,7 @@ class _EditCategoryScreenWidgetState extends State<EditCategoryScreenWidget> {
     super.didChangeDependencies();
 
     if (_isInit) {
-      _editedCategory = CategoryHive();
+      _editedCategory = Category();
     }
     _isInit = false;
   }

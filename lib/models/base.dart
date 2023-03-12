@@ -1,11 +1,10 @@
-import 'package:hive/hive.dart';
-
-abstract class BaseModel<T> extends HiveObject {
+abstract class BaseClass {
   static const String fId = '_id';
   static const String fUserId = 'user_id';
 
   String? get $id;
+
   Map<String, dynamic> toMap(String userId);
   Map<String, dynamic> toMapUpdate();
-  HiveObject fromMap(BaseModel baseModel, Map<String, Object?> map);
+  BaseClass fromMap(BaseClass baseObject, Map<String, Object?> map);
 }

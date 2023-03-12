@@ -3,8 +3,8 @@ import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
-import 'package:my_pensieve/repositories/hive/category_repository.dart';
-import 'package:my_pensieve/repositories/hive/fragment_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/category_repository.dart';
+import 'package:my_pensieve/repositories/sqlite/fragment_repository.dart';
 import 'package:my_pensieve/services/sync_service.dart';
 import 'package:my_pensieve/widgets/fragment_list.dart';
 import 'package:provider/provider.dart';
@@ -27,18 +27,16 @@ class _FragmentListScreenWidgetState extends State<FragmentListScreenWidget> {
       setState(() {
         _syncStatus = 'Syncing data...';
       });
-      final SyncService syncFragmentService =
-          SyncService<FragmentHiveRepository>(
+      final SyncService syncFragmentService = SyncService<FragmentRepository>(
         Fragment.collection,
-        () => FragmentHiveRepository(),
+        () => FragmentRepository(),
       );
       await syncFragmentService.syncDownload(userId);
       await syncFragmentService.syncUpload(userId);
 
-      final SyncService syncCategoryService =
-          SyncService<CategoryHiveRepository>(
+      final SyncService syncCategoryService = SyncService<CategoryRepository>(
         Category.collection,
-        () => CategoryHiveRepository(),
+        () => CategoryRepository(),
       );
       await syncCategoryService.syncDownload(userId);
       await syncCategoryService.syncUpload(userId);

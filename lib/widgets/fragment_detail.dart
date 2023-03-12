@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/widgets/fragment_expanded.dart';
 
 class ViewFragmentWidget extends StatefulWidget {
@@ -8,7 +8,7 @@ class ViewFragmentWidget extends StatefulWidget {
     super.key,
     required this.fragment,
   });
-  final FragmentHive fragment;
+  final Fragment fragment;
 
   @override
   State<ViewFragmentWidget> createState() => _ViewFragmentWidgetState();
@@ -142,7 +142,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(10.0),
                 height: mediaQuery.size.height * 0.5,
                 child: ExpandedFragmentWidget(
-                  fragmentIds: widget.fragment.linkedItems!,
+                  fragmentId: widget.fragment.id!,
                 ),
               ),
           ],

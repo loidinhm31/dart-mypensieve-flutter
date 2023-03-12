@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_pensieve/models/hive/fragment.dart';
+import 'package:my_pensieve/models/fragment.dart';
 
 class LinkFragmentEditItemWidget extends StatefulWidget {
   const LinkFragmentEditItemWidget({
@@ -14,7 +14,7 @@ class LinkFragmentEditItemWidget extends StatefulWidget {
   });
   final ThemeData theme;
   final MediaQueryData mediaQuery;
-  final FragmentHive fragment;
+  final Fragment fragment;
   final bool checked;
   final Function addLinkedItem;
   final Function removeLinkedItem;

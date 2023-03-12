@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:hive/hive.dart';
-import 'package:my_pensieve/repositories/hive/sync_repository.dart';
 import 'package:path_provider/path_provider.dart';
 
-abstract class BaseHiveRepository<T> implements SyncHiveRepository<T> {
+abstract class BaseHiveRepository<T> {
   Box<T>? box;
 
   static Future<void> init(String boxName) async {
