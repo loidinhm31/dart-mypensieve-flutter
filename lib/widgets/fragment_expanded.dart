@@ -1,38 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
+import 'package:my_pensieve/services/fragment_service.dart';
 import 'package:my_pensieve/widgets/fragment_link_view_item.dart';
 
 class ExpandedFragmentWidget extends StatelessWidget {
   const ExpandedFragmentWidget({
     super.key,
-    required this.fragmentIds,
+    required this.fragmentId,
   });
 
-  final List<String?> fragmentIds;
+  final String fragmentId;
 
   Future<List<Fragment>> _fetchLinkedFragments() async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
+    final FragmentService fragmentService = FragmentService();
 
-    List<Map<String, mongo.ObjectId>> idMaps = [];
-    for (var id in fragmentIds) {
-      idMaps.add({'_id': mongo.ObjectId.parse(id!)});
-    }
+    List<Fragment> linkedFragments =
+        await fragmentService.getLinkedFragments(fragmentId);
 
-    if (idMaps.isNotEmpty) {
-      List<Map<String, dynamic>> results =
-          await mongoRepository.find('fragments', {
-        '\$or': idMaps,
-      });
-
-      return results.map((e) {
-        return Fragment.fromMap(e);
-      }).toList();
-    } else {
-      return [];
-    }
+    return linkedFragments;
   }
 
   @override
@@ -58,14 +43,10 @@ class ExpandedFragmentWidget extends StatelessWidget {
                       BorderSide(width: 2.0),
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      LinkFragmentViewItemWidget(
-                        theme: theme,
-                        mediaQuery: mediaQuery,
-                        fragment: snapshot.data![index],
-                      ),
-                    ],
+                  child: LinkFragmentViewItemWidget(
+                    theme: theme,
+                    mediaQuery: mediaQuery,
+                    fragment: snapshot.data![index],
                   ),
                 );
               },

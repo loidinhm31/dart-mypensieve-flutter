@@ -74,7 +74,7 @@ class _LinkFragmentsScreenWidgetState extends State<LinkFragmentsScreenWidget> {
             fragment: _fragments[index],
             checked: Provider.of<LinkedFragments>(context)
                 .linkedItems
-                .contains(_fragments[index]),
+                .any((element) => _fragments[index].id == element.id),
             addLinkedItem: addLinkedItem,
             removeLinkedItem: removeLinkedItem,
           );

@@ -3,11 +3,14 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_pensieve/controller/controller.dart';
+import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/models/fragment.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
+import 'package:my_pensieve/screens/category_select_screen.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
+import 'package:my_pensieve/services/category_service.dart';
 import 'package:provider/provider.dart';
 
 class EditFragmentWidget extends StatefulWidget {
@@ -27,21 +30,25 @@ class EditFragmentWidget extends StatefulWidget {
 
 class _EditFragmentWidgetState extends State<EditFragmentWidget> {
   final _fragmentForm = GlobalKey<FormState>();
+  late CategoryService _categoryService;
 
   late Fragment _editedFragment;
+  late Category _currCategory;
   bool _isInit = true;
 
+  final _categoryController = TextEditingController();
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
   final _linkFragmentsController = TextEditingController();
 
-  List<String?> _linkedIds = [];
+  List<String> _linkedIds = [];
 
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
+    _categoryService = CategoryService();
     widget.customController.handleController = saveForm;
   }
 
@@ -57,30 +64,28 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
         _selectedDate = _editedFragment.date!;
 
         // Add selected linked fragments into list to keep checked state state
-        final fragments = Provider.of<Fragments>(context, listen: false).items;
-        for (String? id in _editedFragment.linkedItems!) {
-          try {
-            Fragment? f = fragments.firstWhere((element) => element.id == id,
-                orElse: () => throw Exception());
+        Provider.of<LinkedFragments>(context, listen: false).getLinkedItems(_editedFragment.id!).then((value) {
+          // Init for linked items
+          _linkedIds = value.map((e) => e.id!).toList();
+          _linkFragmentsController.text = _linkedIds.join(" - ");
+        });
 
-            Provider.of<LinkedFragments>(context, listen: false)
-                .addLinkedItem(f);
-          } catch (error) {
-            log('Linked fragment was deleted');
-          }
-        }
-
-        // Init for linked items
-        _linkedIds = _editedFragment.linkedItems!;
-        _linkFragmentsController.text = _linkedIds.join(" - ");
+        // Init for category
+        _categoryService
+            .getCategoryById(_editedFragment.categoryId!)
+            .then((value) {
+          _currCategory = value;
+          _categoryController.text = _currCategory.name!;
+        }).catchError((onError) {
+          _currCategory = Category();
+          _categoryController.text = 'UNKNOW';
+        });
       } else {
+        _editedFragment = Fragment();
+        _currCategory = Category();
+
         _selectedDate = DateTime.now();
-        _editedFragment = Fragment(
-          category: '',
-          title: '',
-          description: '',
-          date: _selectedDate,
-        );
+        _editedFragment.date = _selectedDate;
       }
       _dateController.text =
           DateFormat('EEEE, yyyy/MM/dd').format(_selectedDate);
@@ -160,7 +165,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
     // Save the fragment
     if (_editedFragment.id != null) {
       await Provider.of<Fragments>(context, listen: false)
-          .updateFragment(_editedFragment.id!, _editedFragment)
+          .updateFragment(_editedFragment)
           .then((_) {
         Provider.of<LinkedFragments>(context, listen: false)
             .clearSelectedLinkedItem();
@@ -175,7 +180,7 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
           Provider.of<LinkedFragments>(context, listen: false)
               .clearSelectedLinkedItem();
 
-          Navigator.of(context).pushNamed(TabScreenWidget.routeName);
+          Navigator.of(context).pushReplacementNamed(TabScreenWidget.routeName);
         });
       } catch (error) {
         await showDialog(
@@ -217,7 +222,8 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                   color: Colors.white,
                 ),
                 TextFormField(
-                  initialValue: _editedFragment.category,
+                  readOnly: true,
+                  controller: _categoryController,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     labelStyle: theme.textTheme.labelLarge,
@@ -235,8 +241,23 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     }
                     return null;
                   },
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(CategorySelectScreenWidget.routeName,
+                          arguments: _currCategory.id)
+                      .then((value) {
+                    if (value != null && (value as String).isNotEmpty) {
+                      setState(() {
+                        if (_currCategory.id != value) {
+                          _categoryService.getCategoryById(value).then((c) {
+                            _currCategory = c;
+                            _categoryController.text = _currCategory.name!;
+                          });
+                        }
+                      });
+                    }
+                  }),
                   onSaved: (newValue) {
-                    _editedFragment.category = newValue;
+                    _editedFragment.categoryId = _currCategory.id;
                   },
                 ),
               ),
@@ -340,49 +361,41 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                     ),
                     Expanded(
                       flex: 5,
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              controller: _dateController,
-                              onTap: () {
-                                // Below line stops keyboard from appearing
-                                FocusScope.of(context)
-                                    .requestFocus(FocusNode());
-
-                                // Show datepicker
-                                _presentDatePicker(context);
-                              },
-                              onSaved: (_) {
-                                _editedFragment.date = _selectedDate;
-                              },
+                          TextFormField(
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
                             ),
+                            controller: _dateController,
+                            onTap: () {
+                              // Below line stops keyboard from appearing
+                              FocusScope.of(context).requestFocus(FocusNode());
+
+                              // Show datepicker
+                              _presentDatePicker(context);
+                            },
+                            onSaved: (_) {
+                              _editedFragment.date = _selectedDate;
+                            },
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              controller: _timeController,
-                              onTap: () {
-                                // Below line stops keyboard from appearing
-                                FocusScope.of(context)
-                                    .requestFocus(FocusNode());
-
-                                // Show datepicker
-                                _presentTimePicker(context);
-                              },
-                              onSaved: (_) {
-                                _editedFragment.date = _selectedDate;
-                              },
+                          TextFormField(
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
                             ),
+                            controller: _timeController,
+                            onTap: () {
+                              // Below line stops keyboard from appearing
+                              FocusScope.of(context).requestFocus(FocusNode());
+
+                              // Show date picker
+                              _presentTimePicker(context);
+                            },
+                            onSaved: (_) {
+                              _editedFragment.date = _selectedDate;
+                            },
                           ),
                         ],
                       ),
@@ -391,51 +404,64 @@ class _EditFragmentWidgetState extends State<EditFragmentWidget> {
                 ),
               ),
               Container(
-                  padding: const EdgeInsets.all(5.0),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        flex: 1,
-                        child: Icon(
-                          Icons.dataset_linked,
-                          color: Colors.white,
-                        ),
+                padding: const EdgeInsets.all(5.0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      flex: 1,
+                      child: Icon(
+                        Icons.dataset_linked,
+                        color: Colors.white,
                       ),
-                      SizedBox(
-                        width: mediaQuery.size.width * 0.1,
-                      ),
-                      Expanded(
-                          flex: 5,
-                          child: TextFormField(
-                            controller: _linkFragmentsController,
-                            onTap: () => Navigator.of(context)
-                                .pushNamed(LinkFragmentsScreenWidget.routeName,
-                                    arguments: widget.fragmentId)
-                                .then((value) {
-                              if (value == true) {
-                                setState(() {
-                                  _linkedIds = Provider.of<LinkedFragments>(
-                                          context,
-                                          listen: false)
-                                      .linkedItems
-                                      .map((e) => e.id)
-                                      .toList();
-                                  _linkFragmentsController.text =
-                                      _linkedIds.join(" - ");
-                                });
-                              }
-                            }),
-                            onSaved: (newValue) {
-                              _editedFragment.linkedItems =
-                                  Provider.of<LinkedFragments>(context,
-                                          listen: false)
-                                      .linkedItems
-                                      .map((e) => e.id)
-                                      .toList();
-                            },
-                          ))
-                    ],
-                  )),
+                    ),
+                    SizedBox(
+                      width: mediaQuery.size.width * 0.1,
+                    ),
+                    Expanded(
+                        flex: 5,
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: _linkFragmentsController,
+                          decoration: InputDecoration(
+                            labelText: 'Link Items',
+                            labelStyle: theme.textTheme.labelLarge,
+                            enabledBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            errorStyle: const TextStyle(
+                              color: Colors.transparent,
+                              fontSize: 0,
+                            ),
+                          ),
+                          onTap: () => Navigator.of(context)
+                              .pushNamed(LinkFragmentsScreenWidget.routeName,
+                                  arguments: widget.fragmentId)
+                              .then((value) {
+                            if (value == true) {
+                              setState(() {
+                                _linkedIds = Provider.of<LinkedFragments>(
+                                        context,
+                                        listen: false)
+                                    .linkedItems
+                                    .map((e) => e.id!)
+                                    .toList();
+                                _linkFragmentsController.text =
+                                    _linkedIds.join(" - ");
+                              });
+                            }
+                          }),
+                          onSaved: (newValue) {
+                            _editedFragment.linkedItems =
+                                Provider.of<LinkedFragments>(context,
+                                        listen: false)
+                                    .linkedItems
+                                    .map((e) => e.id!)
+                                    .toList();
+                          },
+                        ))
+                  ],
+                ),
+              ),
             ],
           ),
         ),

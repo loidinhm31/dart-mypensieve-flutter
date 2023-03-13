@@ -1,11 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'package:mongo_dart/mongo_dart.dart';
 import 'package:my_pensieve/models/fragment.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
+import 'package:my_pensieve/services/fragment_service.dart';
 
 class Fragments with ChangeNotifier {
-  final _fragmentsColl = 'fragments';
-
   List<Fragment> _items = [];
 
   List<Fragment> get items {
@@ -18,71 +15,39 @@ class Fragments with ChangeNotifier {
   }
 
   Future<void> fetchAndSetFragments() async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
-
+    final FragmentService fragmentService = FragmentService();
     try {
-      final fragments = await mongoRepository.findAll(_fragmentsColl, 'date');
-
-      if (fragments.isNotEmpty) {
-        final List<Fragment> loadedFragments = [];
-        for (var element in fragments) {
-          loadedFragments.add(Fragment.fromMap(element));
-        }
-
-        _items = loadedFragments;
-        notifyListeners();
-      } else {
-        _items = [];
-        notifyListeners();
-      }
+      _items = await fragmentService.getFragments();
+      notifyListeners();
     } catch (error) {
       rethrow;
-    } finally {
-      await mongoRepository.close();
     }
   }
 
   Future<void> addFragment(Fragment fragment) async {
-    final MongoRepository mongoRepository = MongoRepository();
-    await mongoRepository.open();
+    final FragmentService fragmentService = FragmentService();
 
     try {
-      await mongoRepository
-          .insertOne(_fragmentsColl, fragment.toMap())
-          .then((_id) => fragment.id = _id);
+      await fragmentService.addFragment(fragment);
     } catch (error) {
       rethrow;
-    } finally {
-      _items.add(fragment);
-      notifyListeners();
-
-      await mongoRepository.close();
     }
+    _items.add(fragment);
+    notifyListeners();
   }
 
-  Future<void> updateFragment(String id, Fragment newFragment) async {
-    final fragmentIndex = _items.indexWhere((el) => el.id == id);
+  Future<void> updateFragment(Fragment editFragment) async {
+    final fragmentIndex = _items.indexWhere((el) => el.id == editFragment.id);
 
     if (fragmentIndex >= 0) {
-      final MongoRepository mongoRepository = MongoRepository();
-      await mongoRepository.open();
+      final FragmentService fragmentService = FragmentService();
       try {
-        Map<String, dynamic> update = {
-          'selector': {
-            'field': Fragment.ID,
-            'value': ObjectId.parse(id),
-          },
-          'update': newFragment.toMapUpdate(),
-        };
-        await mongoRepository.update(_fragmentsColl, update);
+        await fragmentService.updateFragment(editFragment);
+
+        _items[fragmentIndex] = editFragment;
+        notifyListeners();
       } catch (error) {
         rethrow;
-      } finally {
-        _items[fragmentIndex] = newFragment;
-        notifyListeners();
-
-        await mongoRepository.close();
       }
     }
   }
@@ -91,17 +56,14 @@ class Fragments with ChangeNotifier {
     final fragmentIndex = _items.indexWhere((el) => el.id == id);
 
     if (fragmentIndex >= 0) {
-      final MongoRepository mongoRepository = MongoRepository();
-      await mongoRepository.open();
+      final FragmentService fragmentService = FragmentService();
+
       try {
-        await mongoRepository
-            .delete(_fragmentsColl, {Fragment.ID: ObjectId.parse(id)});
-      } catch (error) {
-        rethrow;
-      } finally {
-        await mongoRepository.close();
+        fragmentService.removeItem(id);
         _items.removeAt(fragmentIndex);
         notifyListeners();
+      } catch (error) {
+        rethrow;
       }
     }
   }

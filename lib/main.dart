@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:my_pensieve/daos/database.dart' as db;
+import 'package:my_pensieve/models/hive/local_sync.dart';
 import 'package:my_pensieve/providers/auth.dart';
 import 'package:my_pensieve/providers/fragments.dart';
 import 'package:my_pensieve/providers/linked_fragments.dart';
+import 'package:my_pensieve/repositories/hive/base_repository.dart';
+import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
 import 'package:my_pensieve/screens/auth_screen.dart';
+import 'package:my_pensieve/screens/category_edit_screent.dart';
+import 'package:my_pensieve/screens/category_select_screen.dart';
 import 'package:my_pensieve/screens/fragment_detail_screen.dart';
 import 'package:my_pensieve/screens/fragment_edit_screen.dart';
 import 'package:my_pensieve/screens/fragment_link_screen.dart';
@@ -10,10 +17,22 @@ import 'package:my_pensieve/screens/fragments_screen.dart';
 import 'package:my_pensieve/screens/tabs_screen.dart';
 import 'package:my_pensieve/themes/primary_pallete.dart';
 import 'package:my_pensieve/themes/second_pallete.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final appDocumentDir = await getApplicationDocumentsDirectory();
+
+  Hive
+    ..init('${appDocumentDir.path}/pensieve')
+    ..registerAdapter(LocalSyncHiveAdapter());
+
+  await BaseHiveRepository.init(LocalSyncHiveRepository.boxInit);
+
+  Get.put(db.AppDatabase());
 
   runApp(const MyApp());
 }
@@ -77,6 +96,12 @@ class MyApp extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  titleSmall: const TextStyle(
+                    fontFamily: 'University-Oldstyle',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   labelLarge: const TextStyle(
                     fontFamily: 'University-Oldstyle',
                     fontSize: 20,
@@ -86,6 +111,12 @@ class MyApp extends StatelessWidget {
                   labelMedium: const TextStyle(
                     fontFamily: 'University-Oldstyle',
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: SecondPallete.kToDark,
+                  ),
+                  labelSmall: const TextStyle(
+                    fontFamily: 'University-Oldstyle',
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: SecondPallete.kToDark,
                   ),
@@ -104,15 +135,19 @@ class MyApp extends StatelessWidget {
                           : const AuthScreen(),
                 ),
           routes: {
-            TabScreenWidget.routeName: (ctx) => const TabScreenWidget(),
-            EditFragmentScreenWidget.routeName: (ctx) =>
+            TabScreenWidget.routeName: (context) => const TabScreenWidget(),
+            EditFragmentScreenWidget.routeName: (context) =>
                 EditFragmentScreenWidget(),
-            FragmentListScreenWidget.routeName: (ctx) =>
+            FragmentListScreenWidget.routeName: (context) =>
                 const FragmentListScreenWidget(),
-            LinkFragmentsScreenWidget.routeName: (ctx) =>
+            LinkFragmentsScreenWidget.routeName: (context) =>
                 const LinkFragmentsScreenWidget(),
-            DetailFragmentScreenWidget.routeName: (ctx) =>
-                DetailFragmentScreenWidget(),
+            DetailFragmentScreenWidget.routeName: (context) =>
+                const DetailFragmentScreenWidget(),
+            CategorySelectScreenWidget.routeName: (context) =>
+                const CategorySelectScreenWidget(),
+            EditCategoryScreenWidget.routeName: (context) =>
+                const EditCategoryScreenWidget(),
           },
         ),
       ),

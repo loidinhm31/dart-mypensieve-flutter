@@ -27,7 +27,10 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('An Error Occurred!'),
-        content: Text(message),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.black),
+        ),
         actions: <Widget>[
           TextButton(
             child: const Text('Okay'),
@@ -69,7 +72,7 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
       log("Exception $error");
       log('StackTrace $stack');
       final errorMessage =
-          'Could not authenticate you. Please try again later.\nError: ${error}';
+          'Could not authenticate you. Please try again later.\nError: $error';
       _showErrorDialog(errorMessage);
     }
 
@@ -92,17 +95,21 @@ class _AuthCardWidgetState extends State<AuthCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final deviceSize = MediaQuery.of(context).size;
+    final mediaQuery = MediaQuery.of(context);
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
       child: Container(
-        height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
-        width: deviceSize.width * 0.75,
+        height: _authMode == AuthMode.Signup
+            ? mediaQuery.size.height * 0.55
+            : mediaQuery.size.height * 0.4,
+        constraints: BoxConstraints(
+            minHeight: _authMode == AuthMode.Signup
+                ? mediaQuery.size.height * 0.55
+                : mediaQuery.size.height * 0.4),
+        width: mediaQuery.size.width * 0.75,
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,

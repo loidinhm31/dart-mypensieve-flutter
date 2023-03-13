@@ -5,7 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
 import 'package:my_pensieve/enum/auth_mode.dart';
 import 'package:my_pensieve/models/user.dart';
-import 'package:my_pensieve/repository/mongo_repository.dart';
+import 'package:my_pensieve/repositories/mongo_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth with ChangeNotifier {

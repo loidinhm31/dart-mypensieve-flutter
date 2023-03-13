@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 class EditFragmentScreenWidget extends StatelessWidget {
   EditFragmentScreenWidget({super.key});
 
-  static const routeName = '/fragment-new';
+  static const routeName = '/fragment-edit';
 
   final CustomController customController = CustomController();
 
@@ -37,9 +37,9 @@ class EditFragmentScreenWidget extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => _handleCancelButton(context),
-          child: const Icon(
+          icon: const Icon(
             Icons.cancel,
           ),
         ),

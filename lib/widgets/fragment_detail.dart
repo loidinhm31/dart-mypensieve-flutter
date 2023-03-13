@@ -26,7 +26,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
           SizedBox(
             width: mediaQuery.size.width * 0.1,
           ),
-          text,
+          Expanded(child: text),
         ],
       ),
     );
@@ -56,22 +56,37 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(6),
                 child: FittedBox(
                   child: Text(
-                    widget.fragment.category!,
+                    widget.fragment.categoryName!,
                     style: theme.textTheme.labelLarge,
                   ),
                 ),
               ),
             ),
-            _buildFragmentItem(
-              theme,
-              mediaQuery,
-              const Icon(
-                Icons.title,
-                color: Colors.white,
-              ),
-              Text(
-                widget.fragment.title!,
-                style: theme.textTheme.displayLarge,
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 25, 10, 10),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.title,
+                    color: Colors.white,
+                  ),
+                  SizedBox(
+                    width: mediaQuery.size.width * 0.1,
+                  ),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.topLeft,
+                      child: Chip(
+                        backgroundColor: theme.colorScheme.secondary,
+                        padding: const EdgeInsets.all(5.0),
+                        label: Text(
+                          widget.fragment.title!,
+                          style: theme.textTheme.displayLarge,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             _buildFragmentItem(
@@ -127,7 +142,7 @@ class _ViewFragmentWidgetState extends State<ViewFragmentWidget> {
                 padding: const EdgeInsets.all(10.0),
                 height: mediaQuery.size.height * 0.5,
                 child: ExpandedFragmentWidget(
-                  fragmentIds: widget.fragment.linkedItems!,
+                  fragmentId: widget.fragment.id!,
                 ),
               ),
           ],
