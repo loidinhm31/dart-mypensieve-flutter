@@ -1,45 +1,29 @@
 import 'dart:developer';
 
-import 'package:my_pensieve/models/category.dart';
 import 'package:my_pensieve/models/device_sync.dart';
 import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/pageable.dart';
 import 'package:my_pensieve/repositories/hive/local_sync_repository.dart';
-import 'package:my_pensieve/repositories/sqlite/category_repository.dart';
 import 'package:my_pensieve/repositories/sqlite/fragment_repository.dart';
 import 'package:my_pensieve/repositories/sqlite/linked_fragment_repository.dart';
 
 class FragmentService {
   late final FragmentRepository _fragmentRepository;
   late final LocalSyncHiveRepository _localSyncHiveRepository;
-  late final CategoryRepository _categoryRepository;
   late final LinkedFragmentRepository _linkedFragmentRepository;
 
   FragmentService() {
     _fragmentRepository = FragmentRepository();
     _linkedFragmentRepository = LinkedFragmentRepository();
     _localSyncHiveRepository = LocalSyncHiveRepository();
-    _categoryRepository = CategoryRepository();
   }
 
-  Future<List<Fragment>> getFragments() async {
+  Future<List<Fragment>> getPageableFragments(Pageable pageable) async {
     _fragmentRepository.init();
-    _categoryRepository.init();
 
     List<Fragment> fragments = [];
     try {
-      fragments = await _fragmentRepository.findAll();
-      final List<Category> categories = await _categoryRepository.findAll();
-
-      for (var f in fragments) {
-        Category currCategory;
-        try {
-          currCategory = categories.firstWhere((c1) => c1.id == f.categoryId,
-              orElse: () => throw Exception());
-          f.categoryName = currCategory.name;
-        } catch (_) {
-          f.categoryName = 'UNKNOW';
-        }
-      }
+      fragments = await _fragmentRepository.findPageableAll(pageable);
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');
@@ -51,25 +35,12 @@ class FragmentService {
   Future<List<Fragment>> getLinkedFragments(String id) async {
     _fragmentRepository.init();
     _linkedFragmentRepository.init();
-    _categoryRepository.init();
 
     List<Fragment> linkedFragments = [];
     try {
       final linkedIds =
           await _linkedFragmentRepository.findLinkedFragmentsByFragmentId(id);
       linkedFragments = await _fragmentRepository.findAllByIds(linkedIds);
-
-      final List<Category> categories = await _categoryRepository.findAll();
-      for (var lf in linkedFragments) {
-        Category currCategory;
-        try {
-          currCategory = categories.firstWhere((c1) => c1.id == lf.categoryId,
-              orElse: () => throw Exception());
-          lf.categoryName = currCategory.name;
-        } catch (_) {
-          lf.categoryName = 'UNKNOW';
-        }
-      }
     } catch (error, stack) {
       log('Error: $error');
       log('StackTrace: $stack');

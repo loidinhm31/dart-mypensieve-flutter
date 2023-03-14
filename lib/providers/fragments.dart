@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:my_pensieve/models/fragment.dart';
+import 'package:my_pensieve/models/pageable.dart';
 import 'package:my_pensieve/services/fragment_service.dart';
 
 class Fragments with ChangeNotifier {
@@ -14,14 +15,31 @@ class Fragments with ChangeNotifier {
         orElse: () => throw Exception());
   }
 
-  Future<void> fetchAndSetFragments() async {
+  Future<void> fetchAndSetFragments(Pageable pageable) async {
     final FragmentService fragmentService = FragmentService();
     try {
-      _items = await fragmentService.getFragments();
+      _items = await fragmentService.getPageableFragments(
+        Pageable(pageNumber: pageable.pageNumber),
+      );
       notifyListeners();
     } catch (error) {
       rethrow;
     }
+  }
+
+  Future<List<Fragment>> fetchFragments(Pageable pageable) async {
+    final FragmentService fragmentService = FragmentService();
+    List<Fragment> newFragments = [];
+    try {
+      newFragments = await fragmentService.getPageableFragments(
+        Pageable(pageNumber: pageable.pageNumber),
+      );
+    } catch (error) {
+      rethrow;
+    }
+    _items.addAll(newFragments);
+
+    return newFragments;
   }
 
   Future<void> addFragment(Fragment fragment) async {

@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:my_pensieve/daos/database.dart' as db;
+import 'package:my_pensieve/daos/fragments_dao.dart';
 import 'package:my_pensieve/models/base.dart';
 
 class Fragment extends BaseClass {
@@ -78,5 +79,16 @@ class Fragment extends BaseClass {
     description = fragment.description;
     note = fragment.note;
     date = fragment.date;
+  }
+
+  Fragment.fromDatabaseWithCustomFields(
+      FragmentWithCategoryName fragmentCustom) {
+    id = fragmentCustom.fragment.id;
+    categoryId = fragmentCustom.fragment.categoryId;
+    categoryName = fragmentCustom.categoryName ?? 'UNKNOW';
+    title = fragmentCustom.fragment.title;
+    description = fragmentCustom.fragment.description;
+    note = fragmentCustom.fragment.note;
+    date = fragmentCustom.fragment.date;
   }
 }

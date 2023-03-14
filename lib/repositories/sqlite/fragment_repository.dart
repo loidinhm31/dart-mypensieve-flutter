@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:my_pensieve/daos/database.dart';
+import 'package:my_pensieve/daos/fragments_dao.dart';
 import 'package:my_pensieve/models/base.dart';
 import 'package:my_pensieve/models/fragment.dart' as f;
+import 'package:my_pensieve/models/pageable.dart';
 import 'package:my_pensieve/repositories/sqlite/sync_repository.dart';
 
 class FragmentRepository extends SyncRepository<f.Fragment> {
@@ -136,8 +138,17 @@ class FragmentRepository extends SyncRepository<f.Fragment> {
   }
 
   Future<List<f.Fragment>> findAllByIds(List<String?> ids) async {
-    List<Fragment> fragments =
-        await database!.fragmentsDao.findAllByIdList(ids);
+    List<FragmentWithCategoryName> fragments =
+        await database!.fragmentsDao.findAllWithCategoryByIdList(ids);
+
+    List<f.Fragment> resultFragments = fragments.map((e) {
+      return f.Fragment.fromDatabaseWithCustomFields(e);
+    }).toList();
+    return resultFragments;
+  }
+
+  Future<List<f.Fragment>> findAll() async {
+    List<Fragment> fragments = await database!.fragmentsDao.findAll();
 
     List<f.Fragment> resultFragments = fragments.map((e) {
       return f.Fragment.fromDatabase(e);
@@ -145,11 +156,12 @@ class FragmentRepository extends SyncRepository<f.Fragment> {
     return resultFragments;
   }
 
-  Future<List<f.Fragment>> findAll() async {
-    List<Fragment> fragments = await database!.fragmentsDao.findAllFragments();
+  Future<List<f.Fragment>> findPageableAll(Pageable pageable) async {
+    List<FragmentWithCategoryName> fragments =
+        await database!.fragmentsDao.findPageableAll(pageable);
 
     List<f.Fragment> resultFragments = fragments.map((e) {
-      return f.Fragment.fromDatabase(e);
+      return f.Fragment.fromDatabaseWithCustomFields(e);
     }).toList();
     return resultFragments;
   }

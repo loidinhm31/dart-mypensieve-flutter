@@ -10,6 +10,12 @@ import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
+@DataClassName('Category')
+class Categories extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+}
+
 class Fragments extends Table {
   TextColumn get id => text()();
   TextColumn get categoryId => text().named('category_id')();
@@ -30,13 +36,9 @@ class LinkedFragments extends Table {
       text().named('linked_id').references(Fragments, #id)();
 
   @override
-  List<Set<Column>> get uniqueKeys => [{fragmentId, linkedId}];
-}
-
-@DataClassName('Category')
-class Categories extends Table {
-  TextColumn get id => text()();
-  TextColumn get name => text()();
+  List<Set<Column>> get uniqueKeys => [
+        {fragmentId, linkedId}
+      ];
 }
 
 @DriftDatabase(tables: [
